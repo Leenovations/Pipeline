@@ -88,7 +88,7 @@ def markduplicate(name):
     command = f'/media/src/Tools/gatk-4.4.0.0/gatk \
                 MarkDuplicatesSpark \
                 -I 03.Align/{name}.sam \
-                -O 03.Align/{name}.MarkDuplicat.bam \
+                -O 03.Align/{name}.MarkDuplicate.bam \
                 -M 03.Align/{name}.MarkDuplicatesSpark.metrics.txt \
                 --remove-all-duplicates true'
     os.system(command)
@@ -131,9 +131,8 @@ def haplotypecaller(name):
                 HaplotypeCallerSpark \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 -I 03.Align/{name}.bam \
-                -O 03.Align/{name}.vcf \
+                -O 03.Align/{name}.haplotype.vcf \
                 -L /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.whole_genome.interval_list \
-                --bam-output 03.Align/{name}.Haplotype.bam \
                 -OVI true \
                 --emit-ref-confidence GVCF"
     os.system(command)
@@ -143,45 +142,88 @@ def mutect2(name):
                 Mutect2 \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 -I 03.Align/{name}.bam \
-                -O 03.Align/{name}.vcf \
+                -O 03.Align/{name}.mutect2.vcf \
                 -L /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.whole_genome.interval_list \
+                -tumor {name} \
                 --bam-output 03.Align/{name}.mutect2.bam \
                 -OVI true \
+                --callable-depth 5 \
                 --germline-resource /media/src/hg{sys.argv[1]}/03.db/af-only-gnomad.raw.sites.vcf \
                 --panel-of-normals /media/src/hg{sys.argv[1]}/03.db/Mutect2-WGS-panel-hg{sys.argv[1]}.vcf"
     os.system(command)
 #----------------------------------------------------------------------------------------#
-#----------------------------------------------------------------------------------------#
-#----------------------------------------------------------------------------------------#
-#----------------------------------------------------------------------------------------#
-#----------------------------------------------------------------------------------------#
-#----------------------------------------------------------------------------------------#
-#----------------------------------------------------------------------------------------#
-#----------------------------------------------------------------------------------------#
-#----------------------------------------------------------------------------------------#
-def SV(Name):
-    command = f"delly call \
-                -g /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                -o {Name}.sv.bcf \
-                -x /Bioinformatics/00.Tools/delly/excludeTemplates/human.hg{sys.argv[1]}.excl.tsv \
-                {Name}.Real.bam"
+def getpileupsummaries(name):
+    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
+                GetPileupSummaries \
+                -I 03.Align/{name}.bam \
+                -V /media/src/hg{sys.argv[1]}/03.db/small_exac_common_3.vcf \
+                -L /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.whole_genome.interval_list \
+                -O 03.Align/{name}.getpileupsummaries.table"
     os.system(command)
 #----------------------------------------------------------------------------------------#
-def ChromosomeCNV(Name):
-    command = f"cnvkit.py batch \
-                {Name}.Real.bam -n \
-                -\ /media/src/hg{sys.argv[1]}/hg{sys.argv[1]}.bed \
+def calculatecontamination(name):
+    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
+                CalculateContamination \
+                -I 03.Align/{name}.getpileupsummaries.table \
+                -O 03.Align/{name}.contamination.table"
+    os.system(command)
+#----------------------------------------------------------------------------------------#
+def filtermutectcall(name):
+    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
+                FilterMutectCalls \
+                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -V 03.Align/{name}.mutect2.vcf \
+                --contamination-table 03.Align/{name}.contamination.table \
+                --stats 03.Align/{name}.mutect2.vcf.stats \
+                -O 03.Align/{name}.mutect2.filtered.vcf"
+    os.system(command)
+#----------------------------------------------------------------------------------------#
+def varscan2(name):
+    command = f'samtools mpileup \
                 -f /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                --output-dir ./"
+                --max-depth 1000000 \
+                03.Align/{name}.bam > 03.Align/{name}.mpileup'
     os.system(command)
 
-    command = f"cnvkit.py segment \
-                {Name}.cnr \
-                -o {Name}.cns"
+    command = f'java -jar /Bioinformatics/00.Tools/varscan-2.4.5/VarScan.v2.4.1.jar \
+                mpileup2cns 03.Align/{name}.mpileup \
+                --min-avg-qual 20 --min-coverage 10 --min-reads2 3 \
+                --min-var-freq 0.001 --variants \
+                --output-vcf 1 > 03.Align/{name}.varscan2.vcf'
+    os.system(command)
+#----------------------------------------------------------------------------------------#
+def SV(name):
+    if os.path.isdir('04.SV'):
+        pass
+    else:
+        command = 'mkdir 04.SV'
+        os.system(command)
+
+    command = f"delly call \
+                -g /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -o 04.SV/{Name}.sv.bcf \
+                -x /Bioinformatics/00.Tools/delly/excludeTemplates/human.hg{sys.argv[1]}.excl.tsv \
+                03.Align/{name}.bam"
+    os.system(command)
+
+    command = f"bcftools view 04.SV/{Name}.sv.bcf -Oz > 04.SV/{Name}.sv.vcf.gz"
+    os.system(command)
+#----------------------------------------------------------------------------------------#
+def ChromosomeCNV(name):
+    command = f"python /media/src/Tools/cnvkit/cnvlib/cnvkit.py batch \
+                03.Align/{name}.bam -n \
+                -t /media/src/hg{sys.argv[1]}/01.Methylation/00.Bed/NCBI.RefSeq.Selected.Gene.bed \
+                -f /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                --output-dir 04.SV/"
+    os.system(command)
+
+    command = f"python /media/src/Tools/cnvkit/cnvlib/cnvkit.py segment \
+                04.SV/{Name}.cnr \
+                -o 04.SV/{Name}.cns"
     # os.system(command)
 
     command = f"cnvkit.py scatter \
-                {Name}.markdup.cnr -s {Name}.Real.cns -o {Name}.Chromosome.CNV.png"
+                04.SV/{Name}.cnr -s 04.SV/{Name}.cns -o 04.SV/{Name}.Chromosome.CNV.png"
     # os.system(command)
 #----------------------------------------------------------------------------------------#
 if sys.argv[3] == "All":
@@ -196,7 +238,11 @@ if sys.argv[3] == "All":
     applyBQSR(Name)
     haplotypecaller(Name)
     mutect2(Name)
-    # SV(Name)
+    getpileupsummaries(Name)
+    calculatecontamination(Name)
+    filtermutectcall(Name)
+    varscan2(Name)
+    SV(Name)
     # ChromosomeCNV(Name)
 elif sys.argv[3] == "FastQC":
     pass
