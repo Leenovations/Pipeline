@@ -3,12 +3,13 @@
 import sys
 import os
 import time
+import glob
 import argparse
 import pandas as pd
 
 #----------------------------------------------------------------------------------------#
 parser = argparse.ArgumentParser(description="Pipeline Usage")
-parser.add_argument("1", metavar="<38 or {sys.argv[1]}>", help="Select Reference version")
+parser.add_argument("1", metavar="<38 or 19>", help="Select Reference version")
 parser.add_argument("2", metavar="<Core>", help="Set Core")
 parser.add_argument("3", metavar="<Step>", help="All, Align, Annotation, SV, etc")
 args = parser.parse_args()
@@ -115,6 +116,9 @@ def baserecalibrator(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def applyBQSR(name):
+    command = f'rm -rf 03.Align/{name}.sam'
+    os.system(command)
+    
     command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
                 ApplyBQSRSpark \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
@@ -208,29 +212,85 @@ def SV(name):
 
     command = f"bcftools view 04.SV/{Name}.sv.bcf -Oz > 04.SV/{Name}.sv.vcf.gz"
     os.system(command)
+
+    command = f"bcftools view \
+               -i 'FILTER=\"PASS\" & INFO/SVTYPE!=\"DEL\" & INFO/SVTYPE!=\"INS\" & INFO/SVTYPE!=\"DUP\" & INFO/SVTYPE!=\"INV\"' \
+               04.SV/{Name}.sv.vcf.gz > 04.SV/{Name}.sv.filtered.vcf"
+    os.system(command)
 #----------------------------------------------------------------------------------------#
 def ChromosomeCNV(name):
-    command = f"python /media/src/Tools/cnvkit/cnvlib/cnvkit.py batch \
-                03.Align/{name}.bam -n \
-                -t /media/src/hg{sys.argv[1]}/01.Methylation/00.Bed/NCBI.RefSeq.Selected.Gene.bed \
-                -f /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                --output-dir 04.SV/"
+    if os.path.isdir('04.SV'):
+        pass
+    else:
+        command = 'mkdir 04.SV'
+        os.system(command)
+
+    if os.path.exists(f'/media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.bed'):
+        pass
+    else:
+        command = f'cnvkit.py access \
+                    /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                    -o /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.bed'
+        os.system(command)
+
+    #Run each sample & merge all cnn & time delay
+    command = f'cnvkit.py autobin \
+                03.Align/{name}.bam \
+                -t /media/src/hg{sys.argv[1]}/04.cnv/whole.exome.exon.bed \
+                -g /media/src/hg{sys.argv[1]}/04.cnv/access.hg{sys.argv[1]}.bed \
+                --target-output-bed 04.SV/CNV.target.bed \
+                --antitarget-output-bed 04.SV/CNV.antitarget.bed'
     os.system(command)
 
-    command = f"python /media/src/Tools/cnvkit/cnvlib/cnvkit.py segment \
-                04.SV/{Name}.cnr \
-                -o 04.SV/{Name}.cns"
-    # os.system(command)
+    command = f'cnvkit.py coverage \
+                03.Align/{name}.bam \
+                04.SV/CNV.target.bed \
+                -o 04.SV/{name}.targetcoverage.cnn'
+    os.system(command)
 
-    command = f"cnvkit.py scatter \
-                04.SV/{Name}.cnr -s 04.SV/{Name}.cns -o 04.SV/{Name}.Chromosome.CNV.png"
-    # os.system(command)
+    command = f'cnvkit.py coverage \
+                03.Align/{name}.bam \
+                04.SV/CNV.antitarget.bed \
+                -o 04.SV/{name}.antitargetcoverage.cnn'
+    os.system(command)
+
+    command = f'cnvkit.py reference \
+                04.SV/{name}.targetcoverage.cnn \
+                04.SV/{name}.antitargetcoverage.cnn \
+                -f /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -o 04.SV/Reference.cnn'
+    os.system(command)
+
+    command = f'cnvkit.py fix \
+                04.SV/{name}.targetcoverage.cnn \
+                04.SV/{name}.antitargetcoverage.cnn \
+                04.SV/Reference.cnn \
+                -o 04.SV/{name}.cnr'
+    os.system(command)
+
+    command = f'cnvkit.py segment \
+                04.SV/{name}.cnr \
+                -o 04.SV/{name}.cns'
+    os.system(command)
+
+    command = f'cnvkit.py scatter \
+                04.SV/{name}.cnr \
+                -s 04.SV/{name}.cns \
+                -o 04.SV/{name}.whole.pdf'
+    os.system(command)             
+
+    command = f'cnvkit.py scatter \
+                -s 04.SV/{name}.cnr \
+                -s 04.SV/{name}.cns \
+                -o 04.SV/{name}.BCR.scatter.pdf \
+                -g BCR'
+    os.system(command)                
 #----------------------------------------------------------------------------------------#
-if sys.argv[3] == "All":
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    bwaindex()
+if sys.argv[3] == "All":    
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # bwaindex()
     bwa(Name)
     markduplicate(Name)
     makedict()
@@ -243,7 +303,7 @@ if sys.argv[3] == "All":
     filtermutectcall(Name)
     varscan2(Name)
     SV(Name)
-    # ChromosomeCNV(Name)
+    ChromosomeCNV(Name)
 elif sys.argv[3] == "FastQC":
     pass
 elif sys.argv[3] == "Align":
