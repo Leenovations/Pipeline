@@ -18,6 +18,9 @@ Sample = pd.read_csv("SampleSheet.txt", sep='\t', header=None)
 Name = Sample.iloc[0, 0]
 R1 = Sample.iloc[0, 1]
 R2 = Sample.iloc[0, 2]
+
+Current_Dir = pd.read_csv('PWD.conf', sep='\t', header=None)
+PWD = Current_Dir.iloc[0,0]
 #----------------------------------------------------------------------------------------#
 def PreQC(r1, r2):
     if os.path.isdir('00.PreQC'):
@@ -82,13 +85,21 @@ def bwa(name):
                 -M \
                 -R "@RG\\tID:{name}\\tPL:Illumina\\tLB:NovaSeq\\tSM:{name}" \
                 -v 1 -t {sys.argv[2]} /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz > 03.Align/{name}.sam'
+                {PWD}/02.Trimmed/{name}_val_1.fq.gz {PWD}/02.Trimmed/{name}_val_2.fq.gz > 03.Align/{name}.sam'
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def markduplicate(name):
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+
     command = f'/media/src/Tools/gatk-4.4.0.0/gatk \
+                --java-options "-Xmx3G -Xms1G" \
                 MarkDuplicatesSpark \
-                -I 03.Align/{name}.sam \
+                --spark-master local[{sys.argv[2]}] \
+                -I {PWD}/03.Align/{name}.sam \
                 -O 03.Align/{name}.MarkDuplicate.bam \
                 -M 03.Align/{name}.MarkDuplicatesSpark.metrics.txt \
                 --remove-all-duplicates true'
@@ -105,8 +116,15 @@ def makedict():
         os.system(command) 
 #----------------------------------------------------------------------------------------#
 def baserecalibrator(name):
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+
     command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
                 BaseRecalibratorSpark \
+                --conf spark.executor.cores={sys.argv[2]} \
                 -I 03.Align/{name}.MarkDuplicate.bam \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 --known-sites /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.dbsnp138.vcf \
@@ -119,8 +137,15 @@ def applyBQSR(name):
     command = f'rm -rf 03.Align/{name}.sam'
     os.system(command)
     
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+    
     command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
                 ApplyBQSRSpark \
+                --conf spark.executor.cores={sys.argv[2]} \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 -I 03.Align/{name}.MarkDuplicate.bam \
                 -bqsr 03.Align/{name}.Recalibrator.table \
@@ -131,10 +156,17 @@ def applyBQSR(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def haplotypecaller(name):
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+
     command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
                 HaplotypeCallerSpark \
+                --conf spark.executor.cores={sys.argv[2]} \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                -I 03.Align/{name}.bam \
+                -I {PWD}/03.Align/{name}.bam \
                 -O 03.Align/{name}.haplotype.vcf \
                 -L /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.whole_genome.interval_list \
                 -OVI true \
@@ -142,10 +174,17 @@ def haplotypecaller(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def mutect2(name):
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+
     command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
                 Mutect2 \
+                --conf spark.executor.cores={sys.argv[2]} \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                -I 03.Align/{name}.bam \
+                -I {PWD}/03.Align/{name}.bam \
                 -O 03.Align/{name}.mutect2.vcf \
                 -L /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.whole_genome.interval_list \
                 -tumor {name} \
@@ -157,8 +196,15 @@ def mutect2(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def getpileupsummaries(name):
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+
     command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
                 GetPileupSummaries \
+                --conf spark.executor.cores={sys.argv[2]} \
                 -I 03.Align/{name}.bam \
                 -V /media/src/hg{sys.argv[1]}/03.db/small_exac_common_3.vcf \
                 -L /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.whole_genome.interval_list \
@@ -166,15 +212,29 @@ def getpileupsummaries(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def calculatecontamination(name):
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+
     command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
                 CalculateContamination \
+                --conf spark.executor.cores={sys.argv[2]} \
                 -I 03.Align/{name}.getpileupsummaries.table \
                 -O 03.Align/{name}.contamination.table"
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def filtermutectcall(name):
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+
     command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
                 FilterMutectCalls \
+                --conf spark.executor.cores={sys.argv[2]} \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 -V 03.Align/{name}.mutect2.vcf \
                 --contamination-table 03.Align/{name}.contamination.table \
@@ -183,6 +243,12 @@ def filtermutectcall(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def varscan2(name):
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+
     command = f'samtools mpileup \
                 -f /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 --max-depth 1000000 \
@@ -234,25 +300,25 @@ def ChromosomeCNV(name):
         os.system(command)
 
     #Run each sample & merge all cnn & time delay
-    command = f'cnvkit.py autobin \
-                03.Align/{name}.bam \
-                -t /media/src/hg{sys.argv[1]}/04.cnv/whole.exome.exon.bed \
-                -g /media/src/hg{sys.argv[1]}/04.cnv/access.hg{sys.argv[1]}.bed \
-                --target-output-bed 04.SV/CNV.target.bed \
-                --antitarget-output-bed 04.SV/CNV.antitarget.bed'
-    os.system(command)
+    # command = f'cnvkit.py autobin \
+    #             03.Align/{name}.bam \
+    #             -t /media/src/hg{sys.argv[1]}/04.cnv/whole.exome.exon.bed \
+    #             -g /media/src/hg{sys.argv[1]}/04.cnv/access.hg{sys.argv[1]}.bed \
+    #             --target-output-bed 04.SV/CNV.target.bed \
+    #             --antitarget-output-bed 04.SV/CNV.antitarget.bed'
+    # os.system(command)
 
-    command = f'cnvkit.py coverage \
-                03.Align/{name}.bam \
-                04.SV/CNV.target.bed \
-                -o 04.SV/{name}.targetcoverage.cnn'
-    os.system(command)
+    # command = f'cnvkit.py coverage \
+    #             03.Align/{name}.bam \
+    #             04.SV/CNV.target.bed \
+    #             -o 04.SV/{name}.targetcoverage.cnn'
+    # os.system(command)
 
-    command = f'cnvkit.py coverage \
-                03.Align/{name}.bam \
-                04.SV/CNV.antitarget.bed \
-                -o 04.SV/{name}.antitargetcoverage.cnn'
-    os.system(command)
+    # command = f'cnvkit.py coverage \
+    #             03.Align/{name}.bam \
+    #             04.SV/CNV.antitarget.bed \
+    #             -o 04.SV/{name}.antitargetcoverage.cnn'
+    # os.system(command)
 
     command = f'cnvkit.py reference \
                 04.SV/{name}.targetcoverage.cnn \
@@ -277,7 +343,7 @@ def ChromosomeCNV(name):
                 04.SV/{name}.cnr \
                 -s 04.SV/{name}.cns \
                 -o 04.SV/{name}.whole.pdf'
-    os.system(command)             
+    os.system(command)            
 
     command = f'cnvkit.py scatter \
                 -s 04.SV/{name}.cnr \
@@ -287,10 +353,10 @@ def ChromosomeCNV(name):
     os.system(command)                
 #----------------------------------------------------------------------------------------#
 if sys.argv[3] == "All":    
-    # PreQC(R1, R2)
-    # Trimming(Name, R1, R2)
-    # PostQC(Name)
-    # bwaindex()
+    PreQC(R1, R2)
+    Trimming(Name, R1, R2)
+    PostQC(Name)
+    bwaindex()
     bwa(Name)
     markduplicate(Name)
     makedict()
@@ -305,9 +371,23 @@ if sys.argv[3] == "All":
     SV(Name)
     ChromosomeCNV(Name)
 elif sys.argv[3] == "FastQC":
-    pass
+    PreQC(R1, R2)
+    Trimming(Name, R1, R2)
+    PostQC(Name)
 elif sys.argv[3] == "Align":
-    pass
+    bwaindex()
+    bwa(Name)
+elif sys.argv[3] == "Dedup":
+    markduplicate(Name)
+    baserecalibrator(Name)
+    applyBQSR(Name)
+elif sys.argv[3] == "Mutation":
+    haplotypecaller(Name)
+    mutect2(Name)
+    getpileupsummaries(Name)
+    calculatecontamination(Name)
+    filtermutectcall(Name)
+    varscan2(Name)
 elif sys.argv[3] == "SV":
     SV(Name)
 elif sys.argv[3] == "ChromosomeCNV":
