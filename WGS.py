@@ -95,14 +95,16 @@ def markduplicate(name):
         command = 'mkdir 03.Align'
         os.system(command)
 
-    command = f'/media/src/Tools/gatk-4.4.0.0/gatk \
-                --java-options "-Xmx3G -Xms1G" \
-                MarkDuplicatesSpark \
-                --spark-master local[{sys.argv[2]}] \
+    command = f'java \
+                -Xmx5G \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                MarkDuplicates \
+                --TMP_DIR 03.Align/ \
                 -I {PWD}/03.Align/{name}.sam \
                 -O 03.Align/{name}.MarkDuplicate.bam \
                 -M 03.Align/{name}.MarkDuplicatesSpark.metrics.txt \
-                --remove-all-duplicates true'
+                --REMOVE_DUPLICATES true \
+                --VALIDATION_STRINGENCY LENIENT'
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def makedict():
@@ -379,8 +381,8 @@ elif sys.argv[3] == "Align":
     bwa(Name)
 elif sys.argv[3] == "Dedup":
     markduplicate(Name)
-    baserecalibrator(Name)
-    applyBQSR(Name)
+    # baserecalibrator(Name)
+    # applyBQSR(Name)
 elif sys.argv[3] == "Mutation":
     haplotypecaller(Name)
     mutect2(Name)
