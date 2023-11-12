@@ -85,7 +85,32 @@ def bwa(name):
                 -M \
                 -R "@RG\\tID:{name}\\tPL:Illumina\\tLB:NovaSeq\\tSM:{name}" \
                 -v 1 -t {sys.argv[2]} /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                {PWD}/02.Trimmed/{name}_val_1.fq.gz {PWD}/02.Trimmed/{name}_val_2.fq.gz > 03.Align/{name}.sam'
+                {PWD}/02.Trimmed/{name}_val_1.fq.gz {PWD}/02.Trimmed/{name}_val_2.fq.gz | \
+                samtools view -bS - > 03.Align/{name}.bwa.bam'
+    os.system(command)
+#----------------------------------------------------------------------------------------#
+def AddOrReplaceReadGroups(name):
+    if os.path.isdir('03.Align'):
+        pass
+    else:
+        command = 'mkdir 03.Align'
+        os.system(command)
+
+    command = f'java \
+                -Xmx10G \
+                -XX:ParallelGCThreads={str(24*int(sys.argv[2]))} \
+                -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
+                AddOrReplaceReadGroups \
+                I={PWD}/03.Align/{name}.sam \
+                O=03.Align/{name}.sorted.bam \
+                TMP_DIR=TEMP \
+                RGLB=NGS \
+                RGPL=Illumina \
+                RGPU={name} \
+                RGSM={name} \
+                CREATE_INDEX=true \
+                VALIDATION_STRINGENCY=LENIENT \
+                SO=coordinate'
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def markduplicate(name):
@@ -96,15 +121,17 @@ def markduplicate(name):
         os.system(command)
 
     command = f'java \
-                -Xmx5G \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -Xmx10G \
+                -XX:ParallelGCThreads={str(16*int(sys.argv[2]))} \
+                -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 MarkDuplicates \
-                --TMP_DIR 03.Align/ \
-                -I {PWD}/03.Align/{name}.sam \
-                -O 03.Align/{name}.MarkDuplicate.bam \
-                -M 03.Align/{name}.MarkDuplicatesSpark.metrics.txt \
-                --REMOVE_DUPLICATES true \
-                --VALIDATION_STRINGENCY LENIENT'
+                I=03.Align/{name}.sorted.bam \
+                O=03.Align/{name}.MarkDuplicate.bam \
+                M=03.Align/{name}.MarkDuplicatesSpark.metrics.txt \
+                TMP_DIR=TEMP \
+                REMOVE_DUPLICATES=true \
+                VALIDATION_STRINGENCY=LENIENT \
+                AS=true'
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def makedict():
@@ -360,6 +387,7 @@ if sys.argv[3] == "All":
     PostQC(Name)
     bwaindex()
     bwa(Name)
+    AddOrReplaceReadGroups(Name)
     markduplicate(Name)
     makedict()
     baserecalibrator(Name)
@@ -380,7 +408,8 @@ elif sys.argv[3] == "Align":
     bwaindex()
     bwa(Name)
 elif sys.argv[3] == "Dedup":
-    markduplicate(Name)
+    AddOrReplaceReadGroups(Name)
+    # markduplicate(Name)
     # baserecalibrator(Name)
     # applyBQSR(Name)
 elif sys.argv[3] == "Mutation":
