@@ -281,9 +281,11 @@ def mutect2(name):
         command = 'mkdir 03.Align'
         os.system(command)
 
-    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 Mutect2 \
-                --conf spark.executor.cores={sys.argv[2]} \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 -I 03.Align/{name}.bam \
                 -O 03.Align/{name}.mutect2.vcf \
@@ -295,52 +297,37 @@ def mutect2(name):
                 --germline-resource /media/src/hg{sys.argv[1]}/03.db/af-only-gnomad.raw.sites.vcf \
                 --panel-of-normals /media/src/hg{sys.argv[1]}/03.db/Mutect2-WGS-panel-hg{sys.argv[1]}.vcf"
     os.system(command)
-#----------------------------------------------------------------------------------------#
-def getpileupsummaries(name):
-    if os.path.isdir('03.Align'):
-        pass
-    else:
-        command = 'mkdir 03.Align'
-        os.system(command)
 
-    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 GetPileupSummaries \
-                --conf spark.executor.cores={sys.argv[2]} \
                 -I 03.Align/{name}.bam \
                 -V /media/src/hg{sys.argv[1]}/03.db/small_exac_common_3.vcf \
                 -L /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.whole_genome.interval_list \
                 -O 03.Align/{name}.getpileupsummaries.table"
     os.system(command)
-#----------------------------------------------------------------------------------------#
-def calculatecontamination(name):
-    if os.path.isdir('03.Align'):
-        pass
-    else:
-        command = 'mkdir 03.Align'
-        os.system(command)
 
-    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 CalculateContamination \
-                --conf spark.executor.cores={sys.argv[2]} \
                 -I 03.Align/{name}.getpileupsummaries.table \
                 -O 03.Align/{name}.contamination.table"
     os.system(command)
-#----------------------------------------------------------------------------------------#
-def filtermutectcall(name):
-    if os.path.isdir('03.Align'):
-        pass
-    else:
-        command = 'mkdir 03.Align'
-        os.system(command)
 
-    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 FilterMutectCalls \
-                --conf spark.executor.cores={sys.argv[2]} \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 -V 03.Align/{name}.mutect2.vcf \
                 --contamination-table 03.Align/{name}.contamination.table \
                 --stats 03.Align/{name}.mutect2.vcf.stats \
-                -O 03.Align/{name}.mutect2.filtered.vcf"
+                -O 03.Align/{name}.vcf"
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def varscan2(name):
@@ -495,9 +482,6 @@ if sys.argv[3] == "All":
     # haplotypecaller(Name)
     Variantfilter(Name)
     # mutect2(Name)
-    # getpileupsummaries(Name)
-    # calculatecontamination(Name)
-    # filtermutectcall(Name)
     # varscan2(Name)
     Annotation(Name)
     # SV(Name)
@@ -517,9 +501,6 @@ elif sys.argv[3] == "Dedup":
 elif sys.argv[3] == "Mutation":
     haplotypecaller(Name)
     mutect2(Name)
-    getpileupsummaries(Name)
-    calculatecontamination(Name)
-    filtermutectcall(Name)
     varscan2(Name)
 elif sys.argv[3] == "SV":
     SV(Name)
