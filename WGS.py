@@ -6,7 +6,6 @@ import time
 import glob
 import argparse
 import pandas as pd
-
 #----------------------------------------------------------------------------------------#
 parser = argparse.ArgumentParser(description="Pipeline Usage")
 parser.add_argument("1", metavar="<38 or 19>", help="Select Reference version")
@@ -18,9 +17,6 @@ Sample = pd.read_csv("SampleSheet.txt", sep='\t', header=None)
 Name = Sample.iloc[0, 0]
 R1 = Sample.iloc[0, 1]
 R2 = Sample.iloc[0, 2]
-
-Current_Dir = pd.read_csv('PWD.conf', sep='\t', header=None)
-PWD = Current_Dir.iloc[0,0]
 #----------------------------------------------------------------------------------------#
 def PreQC(r1, r2):
     if os.path.isdir('00.PreQC'):
@@ -85,7 +81,7 @@ def bwa(name):
                 -M \
                 -R "@RG\\tID:{name}\\tPL:Illumina\\tLB:NovaSeq\\tSM:{name}" \
                 -v 1 -t {sys.argv[2]} /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                {PWD}/02.Trimmed/{name}_val_1.fq.gz {PWD}/02.Trimmed/{name}_val_2.fq.gz | \
+                02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz | \
                 samtools view -bS - > 03.Align/{name}.bwa.bam'
     os.system(command)
 #----------------------------------------------------------------------------------------#
@@ -97,11 +93,11 @@ def AddOrReplaceReadGroups(name):
         os.system(command)
 
     command = f'java \
-                -Xmx10G \
-                -XX:ParallelGCThreads={str(24*int(sys.argv[2]))} \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
                 -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 AddOrReplaceReadGroups \
-                I={PWD}/03.Align/{name}.sam \
+                I=03.Align/{name}.bwa.bam \
                 O=03.Align/{name}.sorted.bam \
                 TMP_DIR=TEMP \
                 RGLB=NGS \
@@ -121,8 +117,8 @@ def markduplicate(name):
         os.system(command)
 
     command = f'java \
-                -Xmx10G \
-                -XX:ParallelGCThreads={str(16*int(sys.argv[2]))} \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
                 -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 MarkDuplicates \
                 I=03.Align/{name}.sorted.bam \
@@ -151,9 +147,11 @@ def baserecalibrator(name):
         command = 'mkdir 03.Align'
         os.system(command)
 
-    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
-                BaseRecalibratorSpark \
-                --conf spark.executor.cores={sys.argv[2]} \
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                BaseRecalibrator \
                 -I 03.Align/{name}.MarkDuplicate.bam \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 --known-sites /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.dbsnp138.vcf \
@@ -163,25 +161,21 @@ def baserecalibrator(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def applyBQSR(name):
-    command = f'rm -rf 03.Align/{name}.sam'
-    os.system(command)
-    
     if os.path.isdir('03.Align'):
         pass
     else:
         command = 'mkdir 03.Align'
         os.system(command)
     
-    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
-                ApplyBQSRSpark \
-                --conf spark.executor.cores={sys.argv[2]} \
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                ApplyBQSR \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
                 -I 03.Align/{name}.MarkDuplicate.bam \
                 -bqsr 03.Align/{name}.Recalibrator.table \
-                -O 03.Align/{name}.bam \
-                -static-quantized-quals 10 \
-                -static-quantized-quals 20 \
-                -static-quantized-quals 30"
+                -O 03.Align/{name}.bam"
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def haplotypecaller(name):
@@ -191,15 +185,93 @@ def haplotypecaller(name):
         command = 'mkdir 03.Align'
         os.system(command)
 
-    command = f"/media/src/Tools/gatk-4.4.0.0/gatk \
-                HaplotypeCallerSpark \
-                --conf spark.executor.cores={sys.argv[2]} \
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                HaplotypeCaller \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                -I {PWD}/03.Align/{name}.bam \
+                -I 03.Align/{name}.bam \
                 -O 03.Align/{name}.haplotype.vcf \
                 -L /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.whole_genome.interval_list \
-                -OVI true \
-                --emit-ref-confidence GVCF"
+                -ERC GVCF \
+                --standard-min-confidence-threshold-for-calling 20" 
+    os.system(command)
+#----------------------------------------------------------------------------------------#
+def Variantfilter(name):
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                GenotypeGVCFs \
+                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -V 03.Align/{name}.haplotype.vcf \
+                -O 03.Align/{name}.haplotype.genotype.vcf"
+    os.system(command)
+
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                SelectVariants \
+                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -V 03.Align/{name}.haplotype.genotype.vcf \
+                --select-type-to-include SNP \
+                -O 03.Align/{name}.SNPs.vcf"
+    os.system(command)
+
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                SelectVariants \
+                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -V 03.Align/{name}.haplotype.genotype.vcf \
+                --select-type-to-include INDEL \
+                -O 03.Align/{name}.INDELs.vcf"
+    os.system(command)
+
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                VariantFiltration \
+                -V 03.Align/{name}.haplotype.genotype.vcf \
+                -O 03.Align/{name}.flt.vcf \
+                --filter-expression 'QD < 2.0' --filter-name 'QD2' \
+                --filter-expression 'QUAL < 30.0' --filter-name 'QUAL30' \
+                --filter-expression 'SOR > 3.0' --filter-name 'SOR3' \
+                --filter-expression 'FS > 60.0' --filter-name 'FS60' \
+                --filter-expression 'MQ < 40.0' --filter-name 'MQ40' \
+                --filter-expression 'MQRankSum < -12.5' --filter-name 'MQRankSum-12.5' \
+                --filter-expression 'ReadPosRankSum < -8.0' --filter-name 'ReadPosRankSum-8'" 
+    os.system(command)
+
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                VariantFiltration \
+                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -V 03.Align/{name}.INDELs.vcf \
+                -O 03.Align/{name}.INDELs.flt.vcf \
+                --filter-expression 'QD < 2.0' --filter-name 'QD2' \
+                --filter-expression 'FS > 200.0' --filter-name 'FS200' \
+                --filter-expression 'ReadPosRankSum < -20.0' --filter-name 'ReadPosRankSum-20' \
+                --filter-exporession 'SOR > 10.0' --filter-name 'SOR10'"
+    os.system(command)
+
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                SortVcf \
+                -I 03.Align/{name}.SNPs.flt.vcf \
+                -I 03.Align/{name}.INDELs.flt.vcf \
+                -O 03.Align/{name}.vcf"
+    os.system(command)
+
+    command = f"egrep '^#|PASS' 03.Align/{name}.vcf > 03.Align/{name}.PASS.vcf"
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def mutect2(name):
@@ -213,7 +285,7 @@ def mutect2(name):
                 Mutect2 \
                 --conf spark.executor.cores={sys.argv[2]} \
                 -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                -I {PWD}/03.Align/{name}.bam \
+                -I 03.Align/{name}.bam \
                 -O 03.Align/{name}.mutect2.vcf \
                 -L /media/src/hg{sys.argv[1]}/03.db/Homo_sapiens_assembly{sys.argv[1]}.whole_genome.interval_list \
                 -tumor {name} \
@@ -289,6 +361,34 @@ def varscan2(name):
                 --min-avg-qual 20 --min-coverage 10 --min-reads2 3 \
                 --min-var-freq 0.001 --variants \
                 --output-vcf 1 > 03.Align/{name}.varscan2.vcf'
+    os.system(command)
+#----------------------------------------------------------------------------------------#
+def Annotation(name):
+    if os.path.isdir('04.Annotation'):
+        pass
+    else:
+        command = 'mkdir 04.Annotation'
+        os.system(command)
+
+    command = f"java -jar /media/src/Tools/snpEff/snpEff.jar \
+                -v hg19 \
+                03.Align/{name}.PASS.vcf > 03.Align/{name}.snpeff.vcf"
+    os.system(command)
+
+    command = f'convert2annovar.pl -includeinfo -allsample -withfreq -format vcf4 03.Align/{name}.snpeff.vcf > 04.Annotation/{name}.avinput'
+    os.system(command)
+
+    command = f'annotate_variation.pl -geneanno -out 04.Annotation/{name}.hgvs -build hg{sys.argv[1]} \
+                -dbtype refGene \
+                -hgvs 04.Annotation/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb'
+    os.system(command)
+
+    command = f'table_annovar.pl 04.Annotation/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb \
+                -buildver hg{sys.argv[1]} -out 04.Annotation/{name} \
+                -remove -protocol \
+                refGene,dbnsfp33a,cosmic70,snp138,snp138NonFlagged,popfreq_max_20150413,popfreq_all_20150413,dbscsnv11,exac03nontcga,avsnp147,clinvar_20160302,gnomad_exome,gnomad_genome \
+                -operation g,f,f,f,f,f,f,f,f,f,f,f,f \
+                -nastring . -otherinfo'
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def SV(name):
@@ -382,24 +482,26 @@ def ChromosomeCNV(name):
     os.system(command)                
 #----------------------------------------------------------------------------------------#
 if sys.argv[3] == "All":    
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    bwaindex()
-    bwa(Name)
-    AddOrReplaceReadGroups(Name)
-    markduplicate(Name)
-    makedict()
-    baserecalibrator(Name)
-    applyBQSR(Name)
-    haplotypecaller(Name)
-    mutect2(Name)
-    getpileupsummaries(Name)
-    calculatecontamination(Name)
-    filtermutectcall(Name)
-    varscan2(Name)
-    SV(Name)
-    ChromosomeCNV(Name)
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # bwaindex()
+    # bwa(Name)
+    # AddOrReplaceReadGroups(Name)
+    # markduplicate(Name)
+    # makedict()
+    # baserecalibrator(Name)
+    # applyBQSR(Name)
+    # haplotypecaller(Name)
+    Variantfilter(Name)
+    # mutect2(Name)
+    # getpileupsummaries(Name)
+    # calculatecontamination(Name)
+    # filtermutectcall(Name)
+    # varscan2(Name)
+    Annotation(Name)
+    # SV(Name)
+    # ChromosomeCNV(Name)
 elif sys.argv[3] == "FastQC":
     PreQC(R1, R2)
     Trimming(Name, R1, R2)
@@ -409,9 +511,9 @@ elif sys.argv[3] == "Align":
     bwa(Name)
 elif sys.argv[3] == "Dedup":
     AddOrReplaceReadGroups(Name)
-    # markduplicate(Name)
-    # baserecalibrator(Name)
-    # applyBQSR(Name)
+    markduplicate(Name)
+    baserecalibrator(Name)
+    applyBQSR(Name)
 elif sys.argv[3] == "Mutation":
     haplotypecaller(Name)
     mutect2(Name)
