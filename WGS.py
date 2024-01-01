@@ -199,45 +199,45 @@ def haplotypecaller(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def Variantfilter(name):
-    command = f"java \
-                -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
-                GenotypeGVCFs \
-                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                -V 03.Align/{name}.haplotype.vcf \
-                -O 03.Align/{name}.haplotype.genotype.vcf"
-    os.system(command)
+    # command = f"java \
+    #             -Xmx32G \
+    #             -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+    #             -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+    #             GenotypeGVCFs \
+    #             -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+    #             -V 03.Align/{name}.haplotype.vcf \
+    #             -O 03.Align/{name}.haplotype.genotype.vcf"
+    # os.system(command)
 
-    command = f"java \
-                -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
-                SelectVariants \
-                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                -V 03.Align/{name}.haplotype.genotype.vcf \
-                --select-type-to-include SNP \
-                -O 03.Align/{name}.SNPs.vcf"
-    os.system(command)
+    # command = f"java \
+    #             -Xmx32G \
+    #             -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+    #             -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+    #             SelectVariants \
+    #             -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+    #             -V 03.Align/{name}.haplotype.genotype.vcf \
+    #             --select-type-to-include SNP \
+    #             -O 03.Align/{name}.SNPs.vcf"
+    # os.system(command)
 
-    command = f"java \
-                -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
-                SelectVariants \
-                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                -V 03.Align/{name}.haplotype.genotype.vcf \
-                --select-type-to-include INDEL \
-                -O 03.Align/{name}.INDELs.vcf"
-    os.system(command)
+    # command = f"java \
+    #             -Xmx32G \
+    #             -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+    #             -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+    #             SelectVariants \
+    #             -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+    #             -V 03.Align/{name}.haplotype.genotype.vcf \
+    #             --select-type-to-include INDEL \
+    #             -O 03.Align/{name}.INDELs.vcf"
+    # os.system(command)
 
     command = f"java \
                 -Xmx32G \
                 -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 VariantFiltration \
-                -V 03.Align/{name}.haplotype.genotype.vcf \
-                -O 03.Align/{name}.flt.vcf \
+                -V 03.Align/{name}.SNPs.vcf \
+                -O 03.Align/{name}.SNPs.flt.vcf \
                 --filter-expression 'QD < 2.0' --filter-name 'QD2' \
                 --filter-expression 'QUAL < 30.0' --filter-name 'QUAL30' \
                 --filter-expression 'SOR > 3.0' --filter-name 'SOR3' \
