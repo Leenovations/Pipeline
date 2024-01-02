@@ -231,21 +231,21 @@ def Variantfilter(name):
     #             -O 03.Align/{name}.INDELs.vcf"
     # os.system(command)
 
-    command = f"java \
-                -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
-                VariantFiltration \
-                -V 03.Align/{name}.SNPs.vcf \
-                -O 03.Align/{name}.SNPs.flt.vcf \
-                --filter-expression 'QD < 2.0' --filter-name 'QD2' \
-                --filter-expression 'QUAL < 30.0' --filter-name 'QUAL30' \
-                --filter-expression 'SOR > 3.0' --filter-name 'SOR3' \
-                --filter-expression 'FS > 60.0' --filter-name 'FS60' \
-                --filter-expression 'MQ < 40.0' --filter-name 'MQ40' \
-                --filter-expression 'MQRankSum < -12.5' --filter-name 'MQRankSum-12.5' \
-                --filter-expression 'ReadPosRankSum < -8.0' --filter-name 'ReadPosRankSum-8'" 
-    os.system(command)
+    # command = f"java \
+    #             -Xmx32G \
+    #             -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+    #             -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+    #             VariantFiltration \
+    #             -V 03.Align/{name}.SNPs.vcf \
+    #             -O 03.Align/{name}.SNPs.flt.vcf \
+    #             --filter-expression 'QD < 2.0' --filter-name 'QD2' \
+    #             --filter-expression 'QUAL < 30.0' --filter-name 'QUAL30' \
+    #             --filter-expression 'SOR > 3.0' --filter-name 'SOR3' \
+    #             --filter-expression 'FS > 60.0' --filter-name 'FS60' \
+    #             --filter-expression 'MQ < 40.0' --filter-name 'MQ40' \
+    #             --filter-expression 'MQRankSum < -12.5' --filter-name 'MQRankSum-12.5' \
+    #             --filter-expression 'ReadPosRankSum < -8.0' --filter-name 'ReadPosRankSum-8'" 
+    # os.system(command)
 
     command = f"java \
                 -Xmx32G \
@@ -258,7 +258,7 @@ def Variantfilter(name):
                 --filter-expression 'QD < 2.0' --filter-name 'QD2' \
                 --filter-expression 'FS > 200.0' --filter-name 'FS200' \
                 --filter-expression 'ReadPosRankSum < -20.0' --filter-name 'ReadPosRankSum-20' \
-                --filter-exporession 'SOR > 10.0' --filter-name 'SOR10'"
+                --filter-expression 'SOR > 10.0' --filter-name 'SOR10'"
     os.system(command)
 
     command = f"java \
