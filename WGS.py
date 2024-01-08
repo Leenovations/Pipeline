@@ -199,53 +199,53 @@ def haplotypecaller(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def Variantfilter(name):
-    # command = f"java \
-    #             -Xmx32G \
-    #             -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
-    #             -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
-    #             GenotypeGVCFs \
-    #             -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-    #             -V 03.Align/{name}.haplotype.vcf \
-    #             -O 03.Align/{name}.haplotype.genotype.vcf"
-    # os.system(command)
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                GenotypeGVCFs \
+                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -V 03.Align/{name}.haplotype.vcf \
+                -O 03.Align/{name}.haplotype.genotype.vcf"
+    os.system(command)
 
-    # command = f"java \
-    #             -Xmx32G \
-    #             -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
-    #             -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
-    #             SelectVariants \
-    #             -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-    #             -V 03.Align/{name}.haplotype.genotype.vcf \
-    #             --select-type-to-include SNP \
-    #             -O 03.Align/{name}.SNPs.vcf"
-    # os.system(command)
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                SelectVariants \
+                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -V 03.Align/{name}.haplotype.genotype.vcf \
+                --select-type-to-include SNP \
+                -O 03.Align/{name}.SNPs.vcf"
+    os.system(command)
 
-    # command = f"java \
-    #             -Xmx32G \
-    #             -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
-    #             -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
-    #             SelectVariants \
-    #             -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-    #             -V 03.Align/{name}.haplotype.genotype.vcf \
-    #             --select-type-to-include INDEL \
-    #             -O 03.Align/{name}.INDELs.vcf"
-    # os.system(command)
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                SelectVariants \
+                -R /media/src/hg{sys.argv[1]}/02.Fasta/Homo_sapiens_assembly{sys.argv[1]}.fasta \
+                -V 03.Align/{name}.haplotype.genotype.vcf \
+                --select-type-to-include INDEL \
+                -O 03.Align/{name}.INDELs.vcf"
+    os.system(command)
 
-    # command = f"java \
-    #             -Xmx32G \
-    #             -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
-    #             -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
-    #             VariantFiltration \
-    #             -V 03.Align/{name}.SNPs.vcf \
-    #             -O 03.Align/{name}.SNPs.flt.vcf \
-    #             --filter-expression 'QD < 2.0' --filter-name 'QD2' \
-    #             --filter-expression 'QUAL < 30.0' --filter-name 'QUAL30' \
-    #             --filter-expression 'SOR > 3.0' --filter-name 'SOR3' \
-    #             --filter-expression 'FS > 60.0' --filter-name 'FS60' \
-    #             --filter-expression 'MQ < 40.0' --filter-name 'MQ40' \
-    #             --filter-expression 'MQRankSum < -12.5' --filter-name 'MQRankSum-12.5' \
-    #             --filter-expression 'ReadPosRankSum < -8.0' --filter-name 'ReadPosRankSum-8'" 
-    # os.system(command)
+    command = f"java \
+                -Xmx32G \
+                -XX:ParallelGCThreads={str(2*int(sys.argv[2]))} \
+                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                VariantFiltration \
+                -V 03.Align/{name}.SNPs.vcf \
+                -O 03.Align/{name}.SNPs.flt.vcf \
+                --filter-expression 'QD < 2.0' --filter-name 'QD2' \
+                --filter-expression 'QUAL < 30.0' --filter-name 'QUAL30' \
+                --filter-expression 'SOR > 3.0' --filter-name 'SOR3' \
+                --filter-expression 'FS > 60.0' --filter-name 'FS60' \
+                --filter-expression 'MQ < 40.0' --filter-name 'MQ40' \
+                --filter-expression 'MQRankSum < -12.5' --filter-name 'MQRankSum-12.5' \
+                --filter-expression 'ReadPosRankSum < -8.0' --filter-name 'ReadPosRankSum-8'" 
+    os.system(command)
 
     command = f"java \
                 -Xmx32G \
@@ -327,7 +327,10 @@ def mutect2(name):
                 -V 03.Align/{name}.mutect2.vcf \
                 --contamination-table 03.Align/{name}.contamination.table \
                 --stats 03.Align/{name}.mutect2.vcf.stats \
-                -O 03.Align/{name}.vcf"
+                -O 03.Align/{name}.mutect2.final.vcf"
+    os.system(command)
+
+    command = f"egrep '^#|PASS' 03.Align/{name}.mutect2.final.vcf > 03.Align/{name}.PASS.vcf"
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def varscan2(name):
@@ -480,12 +483,12 @@ if sys.argv[3] == "All":
     # baserecalibrator(Name)
     # applyBQSR(Name)
     # haplotypecaller(Name)
-    Variantfilter(Name)
+    # Variantfilter(Name)
     # mutect2(Name)
     # varscan2(Name)
-    Annotation(Name)
+    # Annotation(Name)
     # SV(Name)
-    # ChromosomeCNV(Name)
+    ChromosomeCNV(Name)
 elif sys.argv[3] == "FastQC":
     PreQC(R1, R2)
     Trimming(Name, R1, R2)
