@@ -148,6 +148,7 @@ if BATCH["Bismark"] == "Y":
 elif BATCH["LAST"] == "Y":
     def LAST():
         command = f"/media/src/Tools/Bisulfighter/bsf-call/bsf-call \
+                    -p {BATCH['CPU']} \
                     -o {Name}.CpG.txt \
                     /media/src/{BATCH['Ref.ver']}/02.Fasta/{BATCH['Ref.ver']}.fa \
                     {R1} \
