@@ -151,8 +151,7 @@ elif BATCH["LAST"] == "Y":
                     -p {BATCH['CPU']} \
                     -o {Name}.CpG.txt \
                     /media/src/{BATCH['Ref.ver']}/02.Fasta/{BATCH['Ref.ver']}.fa \
-                    {R1} \
-                    {R2}"
+                    {R1},{R2}"
         os.system(command)
 #-----------------------------------------------------------------------------#
     if BATCH["Step"] == "All":
