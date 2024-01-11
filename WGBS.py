@@ -112,8 +112,6 @@ if BATCH["Bismark"] == "Y":
 
         command = f"gunzip 03.Output/{name}.deduplicated.bismark.cov.gz"
         os.system(command)
-        command = f"ln 03.Output/{name}.deduplicated.bismark.cov ../CpG/{name}.deduplicated.bismark.cov"
-        os.system(command)
 #----------------------------------------------------------------------------------------#
     def HTML(name):
         command = f"bismark2report --output 03.Output/{name}.html \

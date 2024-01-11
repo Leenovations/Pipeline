@@ -482,6 +482,18 @@ def ChromosomeCNV(name):
                 -g BCR"
     os.system(command)                
 #----------------------------------------------------------------------------------------#
+def CustomCNV(name):
+    if os.path.isdir("05.SV"):
+        pass
+    else:
+        command = "mkdir 05.SV"
+        os.system(command)
+    
+    command = f"samtools bedcov \
+                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/02.Bed.Non/10kb.bed \
+                03.Align/{name}.bam > 05.SV/{name}.bedcov"
+    os.system(command)
+#----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')
     clinvar['id'] = 'chr' + clinvar['id']
@@ -662,25 +674,26 @@ def Results(name):
     Data.to_excel(writer, sheet_name='Result', index=False, na_rep='NaN')
     writer.save()
 #----------------------------------------------------------------------------------------#
-if BATCH["Step"] == "All":    
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    bwaindex()
-    bwa(Name)
-    AddOrReplaceReadGroups(Name)
-    markduplicate(Name)
-    makedict()
-    baserecalibrator(Name)
-    applyBQSR(Name)
-    haplotypecaller(Name)
-    Variantfilter(Name)
-    mutect2(Name)
-    varscan2(Name)
-    Annotation(Name)
-    SV(Name)
-    ChromosomeCNV(Name)
-    Results(Name)
+if BATCH["Step"] == "All":
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # bwaindex()
+    # bwa(Name)
+    # AddOrReplaceReadGroups(Name)
+    # markduplicate(Name)
+    # makedict()
+    # baserecalibrator(Name)
+    # applyBQSR(Name)
+    # haplotypecaller(Name)
+    # Variantfilter(Name)
+    # mutect2(Name)
+    # varscan2(Name)
+    # Annotation(Name)
+    # SV(Name)
+    # ChromosomeCNV(Name)
+    CustomCNV(Name)
+    # Results(Name)
 elif BATCH["Step"] == "FastQC":
     PreQC(R1, R2)
     Trimming(Name, R1, R2)
