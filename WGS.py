@@ -6,13 +6,11 @@ import time
 import glob
 import argparse
 import pandas as pd
+import numpy as np
 import re
 from collections import defaultdict
 #----------------------------------------------------------------------------------------#
 parser = argparse.ArgumentParser(description="Pipeline Usage")
-# parser.add_argument("1", metavar="<38 or 19>", help="Select Reference version")
-# parser.add_argument("2", metavar="<Core>", help="Set Core")
-# parser.add_argument("3", metavar="<Step>", help="All, Align, Annotation, SV, etc")
 args = parser.parse_args()
 #----------------------------------------------------------------------------------------#
 Sample = pd.read_csv("SampleSheet.txt", sep="\t", header=None)
@@ -483,16 +481,42 @@ def ChromosomeCNV(name):
     os.system(command)                
 #----------------------------------------------------------------------------------------#
 def CustomCNV(name):
-    if os.path.isdir("05.SV"):
+    if os.path.isdir("05.SV/00.ChromosomeCNV"):
         pass
     else:
-        command = "mkdir 05.SV"
+        command = "mkdir -p 05.SV/00.ChromosomeCNV"
         os.system(command)
     
     command = f"samtools bedcov \
-                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/02.Bed.Non/10kb.bed \
+                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/1000000bp.Chr.X.bed \
                 03.Align/{name}.bam > 05.SV/{name}.bedcov"
     os.system(command)
+
+    Chromosome = [str(i) for i in range(1,23)] + ['X', 'Y']
+    Data = pd.read_csv(f"{name}.bedcov",
+                    sep='\t',
+                    header=None,
+                    names = ['Chr', 'Start', 'End', 'Count'],
+                    low_memory=False)
+    
+    Data['Length'] = Data['End'] - Data['Start'] + 1
+    Data['count_per_length'] = Data['Count'] / Data['Length']
+    Data['TPM'] = Data['Count'] / Data['Length'] * Data['count_per_length']
+    Data['TPM'] = np.log10(Data['TPM'] + 1)
+    Median_TPM = Data['TPM'].median()
+    Data['TPM'] = Data['TPM'] - Median_TPM
+    
+    Sorted = []
+    for chromosome in Chromosome:
+        Data_sub = Data[Data['Chr'] == chromosome]
+        Sorted.append(Data_sub)
+    Sorted_Data = pd.concat(Sorted)
+    Sorted_Data['Order'] = range(1, len(Sorted_Data) + 1)
+    
+    Sorted_Data.to_csv(f"05.SV/00.ChromosomeCNV/{name}.Chromosome.CNV.txt",
+                        sep='\t',
+                        header='infer',
+                        index=False)
 #----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')
