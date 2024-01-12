@@ -517,6 +517,9 @@ def CustomCNV(name):
                         sep='\t',
                         header='infer',
                         index=False)
+    
+    command = f"Rscript /labmed/00.Code/Pipeline/WGS.ChromosomalCNV.R {name}"
+    os.system(command)
 #----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')
