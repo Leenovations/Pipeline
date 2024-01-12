@@ -42,7 +42,7 @@ CNV <- ggplot(Data, aes(x=Order, y=TPM)) +
              color = "gray", 
              alpha=0.5) +
   annotate(geom = "text", x = median_values, y = -6, label = unique(Data$Chr), size = 4.5) +
-  annotate(geom = "text", x = 2975.5, y = 6, label = 'test', size = 4) +
+  annotate(geom = "text", x = 2975.5, y = 6, label = sprintf('%s', Sample), size = 4) +
   coord_cartesian(ylim = c(-5, 5), expand = T, clip = "off") +
   theme_bw() +
   theme(plot.margin = unit(c(2,2,5,2), "lines"),
