@@ -489,11 +489,11 @@ def CustomCNV(name):
     
     command = f"samtools bedcov \
                 /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/1000000bp.Chr.X.bed \
-                03.Align/{name}.bam > 05.SV/{name}.bedcov"
+                03.Align/{name}.bam > 05.SV/00.ChromosomeCNV/{name}.bedcov"
     os.system(command)
 
     Chromosome = [str(i) for i in range(1,23)] + ['X', 'Y']
-    Data = pd.read_csv(f"{name}.bedcov",
+    Data = pd.read_csv(f"05.SV/00.ChromosomeCNV/{name}.bedcov",
                     sep='\t',
                     header=None,
                     names = ['Chr', 'Start', 'End', 'Count'],

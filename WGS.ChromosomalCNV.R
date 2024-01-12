@@ -9,7 +9,7 @@ args <- commandArgs(trailingOnly = TRUE)
 Sample <- args[1]
 Path <- getwd()
 #-----------------------------------------------------------------------------------#
-Data <- read.table(paste0(Path, '/05.SV/', sprintf('%s', Sample), '.Chromosome.CNV.txt'),
+Data <- read.table(paste0(Path, '/05.SV', '/00.ChromosomeCNV/', sprintf('%s', Sample), '.Chromosome.CNV.txt'),
                    sep='\t',
                    header=T)
 #-----------------------------------------------------------------------------------#
