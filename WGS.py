@@ -488,7 +488,7 @@ def ChromosomalCNV(name):
         os.system(command)
     
     command = f"samtools bedcov \
-                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/1000000bp.Chr.X.bed \
+                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/1MB.exclude.centromere.bed \
                 03.Align/{name}.bam > 05.SV/00.ChromosomeCNV/{name}.bedcov"
     os.system(command)
 
@@ -527,6 +527,11 @@ def GeneCNV(name):
     else:
         command = "mkdir -p 05.SV/01.GeneCNV"
         os.system(command)
+
+    command = f"samtools bedcov \
+                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/whole.exome.gene.200bp.bed \
+                03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.Gene.bedcov"
+    os.system(command)
 #----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')
