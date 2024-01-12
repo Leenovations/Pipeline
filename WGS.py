@@ -9,6 +9,8 @@ import pandas as pd
 import numpy as np
 import re
 from collections import defaultdict
+
+import WGS_GeneCNV_Concat
 #----------------------------------------------------------------------------------------#
 parser = argparse.ArgumentParser(description="Pipeline Usage")
 args = parser.parse_args()
@@ -528,10 +530,15 @@ def GeneCNV(name):
         command = "mkdir -p 05.SV/01.GeneCNV"
         os.system(command)
 
-    command = f"samtools bedcov \
-                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/whole.exome.gene.200bp.bed \
-                03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.Gene.bedcov"
-    os.system(command)
+    # command = f"samtools bedcov \
+    #             /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/whole.exome.gene.200bp.bed \
+    #             03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.Gene.bedcov"
+    # os.system(command)
+        
+    # command = f"cp 05.SV/01.GeneCNV/{name}.txt ../Intermediate/"
+    # os.system(command)
+    
+    WGS_GeneCNV_Concat.Merge(name)
 #----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')
