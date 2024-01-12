@@ -480,7 +480,7 @@ def ChromosomeCNV(name):
                 -g BCR"
     os.system(command)                
 #----------------------------------------------------------------------------------------#
-def CustomCNV(name):
+def ChromosomalCNV(name):
     if os.path.isdir("05.SV/00.ChromosomeCNV"):
         pass
     else:
@@ -520,6 +520,13 @@ def CustomCNV(name):
     
     command = f"Rscript /labmed/00.Code/Pipeline/WGS.ChromosomalCNV.R {name}"
     os.system(command)
+#----------------------------------------------------------------------------------------#
+def GeneCNV(name):
+    if os.path.isdir("05.SV/01.GeneCNV"):
+        pass
+    else:
+        command = "mkdir -p 05.SV/01.GeneCNV"
+        os.system(command)
 #----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')
@@ -719,7 +726,8 @@ if BATCH["Step"] == "All":
     # Annotation(Name)
     # SV(Name)
     # ChromosomeCNV(Name)
-    CustomCNV(Name)
+    # ChromosomalCNV(Name)
+    GeneCNV(Name)
     # Results(Name)
 elif BATCH["Step"] == "FastQC":
     PreQC(R1, R2)
