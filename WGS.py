@@ -531,14 +531,37 @@ def GeneCNV(name):
         os.system(command)
 
     # command = f"samtools bedcov \
-    #             /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/whole.exome.gene.200bp.bed \
+    #             /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/NCBI.RefSeq.Selected.Gene.200bp.Chr.X.bed \
     #             03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.Gene.bedcov"
     # os.system(command)
+    
+    Exon = pd.read_csv('/media/src/hg19/01.Methylation/00.Bed/NCBI.RefSeq.Selected.Exon.Chr.X.bed',
+                       sep='\t',
+                       header=None)
+    Gene = list(set(Exon.iloc[:, 3].to_list()))
+    Gene.sort()
+
+    for gene in Gene:
+        Bed = Exon[Exon.iloc[:, 3] == gene]
+        Bed.to_csv(f"05.SV/01.GeneCNV/{name}.{gene}.bed",
+                   sep='\t',
+                   index=False,
+                   header=None)
+        
+        command = f"samtools depth \
+                    -@ {BATCH['CPU']} \
+                    -b 05.SV/01.GeneCNV/{name}.{gene}.bed \
+                    03.Align/{name}.bam \
+                    -o 05.SV/01.GeneCNV/{name}.{gene}.depth"
+        os.system(command)
+
+        command = f"rm -rf 05.SV/01.GeneCNV/{name}.{gene}.bed"
+        os.system(command)
         
     # command = f"cp 05.SV/01.GeneCNV/{name}.txt ../Intermediate/"
     # os.system(command)
     
-    WGS_GeneCNV_Concat.Merge(name)
+    # WGS_GeneCNV_Concat.Merge(name)
 #----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')

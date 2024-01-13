@@ -15,15 +15,15 @@ def Merge(Name):
         Data = pd.read_csv(data,
                         sep='\t',
                         header=None,
-                        names=['Chr', 'Start', 'End', 'Gene', f'{Sample}'])
+                        names=['Chr', 'Start', 'End', 'Gene', 'Strand', f'{Sample}'])
         
         if DATA is None:
             DATA = Data
         else:
-            DATA = pd.merge(DATA, Data, on=['Chr', 'Start', 'End', 'Gene'])
+            DATA = pd.merge(DATA, Data, on=['Chr', 'Start', 'End', 'Gene', 'Strand'])
 
-    Info = DATA.iloc[:, :4]
-    Coverage = DATA.iloc[:, 4:]
+    Info = DATA.iloc[:, :5]
+    Coverage = DATA.iloc[:, 5:]
 
     Exon_length = DATA['End'] - DATA['Start']
     Depth_Length = Coverage.apply(lambda count: (count / Exon_length))
