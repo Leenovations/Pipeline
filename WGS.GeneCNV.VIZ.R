@@ -54,6 +54,7 @@ for (gene in Gene){
     ggtitle(paste0('\n', gene, '\n')) +
     xlab('') +
     ylab('Coverage') +
+    ylim(0, ceiling(max(Cov$SRR10354232))) +
     scale_x_discrete(expand = c(0, 0)) +
     geom_vline(xintercept=Range_sub$Start,
                linetype='solid',
@@ -72,7 +73,7 @@ for (gene in Gene){
   CNV <- ggplot(Norm, aes(x=Start, y=SRR10354232)) +
     geom_line(color='purple', group=1) +
     xlab('') +
-    ylab(Log[10]~NormalizedCNV) +
+    ylab(Log[2]~NormalizedCNV) +
     scale_x_discrete(expand = c(0, 0)) +
     geom_hline(yintercept=0,
                linetype='dashed',
