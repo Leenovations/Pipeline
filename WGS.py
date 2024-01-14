@@ -531,8 +531,9 @@ def GeneCNV(name):
         os.system(command)
 
     
-    Exon = pd.read_csv('/media/src/hg19/01.Methylation/00.Bed/NCBI.RefSeq.Selected.Exon.Chr.X.bed',
+    Exon = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/NCBI.RefSeq.Selected.Exon.Chr.X.bed",
                        sep='\t',
+                       low_memory=False,
                        header=None)
     Gene = list(set(Exon.iloc[:, 3].to_list()))
     Gene.sort()
