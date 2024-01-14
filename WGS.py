@@ -530,30 +530,60 @@ def GeneCNV(name):
         command = "mkdir -p 05.SV/01.GeneCNV"
         os.system(command)
 
+    # Exon = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/NCBI.RefSeq.Selected.GeneCNV.Chr.X.bed",
+    #                    sep='\t',
+    #                    low_memory=False,
+    #                    header=None)
+    # Gene = list(set(Exon.iloc[:, 3].to_list()))
+    # Gene.sort()
+
+    # for gene in Gene:
+    #     Bed = Exon[Exon.iloc[:, 3] == gene]
+    #     Bed.to_csv(f"05.SV/01.GeneCNV/{name}.{gene}.bed",
+    #                sep='\t',
+    #                index=False,
+    #                header=None)
+
+    #     command = f"samtools bedcov \
+    #                 05.SV/01.GeneCNV/{name}.{gene}.bed \
+    #                 03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.{gene}.bedcov"
+    #     os.system(command)
+
+    Data1 = pd.read_csv(f"/media/node03-HDD01/03.WGS/00.RawData/SRR10354232/05.SV/01.GeneCNV/SRR10354232.HBE1.bedcov", sep='\t', low_memory=False, header=None,
+                        names = ['Chr', 'Start' , 'End' , 'Gene', 'Exon', 'Strand', f'{name}'])
+    Data2 = pd.read_csv(f"/media/node03-HDD01/03.WGS/00.RawData/SRR10354233/05.SV/01.GeneCNV/SRR10354233.HBE1.bedcov", sep='\t', low_memory=False, header=None,
+                        names = ['Chr', 'Start' , 'End' , 'Gene', 'Exon', 'Strand', 'SRR10354233'])
+    Data3 = pd.read_csv(f"/media/node03-HDD01/03.WGS/00.RawData/SRR10354234/05.SV/01.GeneCNV/SRR10354234.HBE1.bedcov", sep='\t', low_memory=False, header=None,
+                        names = ['Chr', 'Start' , 'End' , 'Gene', 'Exon', 'Strand', 'SRR10354234'])
     
-    Exon = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/NCBI.RefSeq.Selected.Exon.Chr.X.bed",
-                       sep='\t',
-                       low_memory=False,
-                       header=None)
-    Gene = list(set(Exon.iloc[:, 3].to_list()))
-    Gene.sort()
+    DATA = pd.merge(Data1, Data2, on=['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand'])
+    DATA = pd.merge(DATA, Data3, on=['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand'])
 
-    for gene in Gene:
-        Bed = Exon[Exon.iloc[:, 3] == gene]
-        Bed.to_csv(f"05.SV/01.GeneCNV/{name}.{gene}.bed",
-                   sep='\t',
-                   index=False,
-                   header=None)
+    Info = DATA.iloc[:, :6]
+    Coverage = DATA.iloc[:, 6:]
 
-        command = f"samtools bedcov \
-                    05.SV/01.GeneCNV/{name}.{gene}.bed \
-                    03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.Gene.bedcov"
-        os.system(command)
+    Exon_length = DATA['End'] - DATA['Start']
+    Depth_Length = Coverage.apply(lambda count: (count / Exon_length))
+    Sum_Depth_Length = Depth_Length.sum(axis=0)
 
-        # command = f"rm -rf 05.SV/01.GeneCNV/{name}.{gene}.bed"
-        # os.system(command)
-        
-    # command = f"cp 05.SV/01.GeneCNV/{name}.txt ../Intermediate/"
+    Exon_length = np.array(Exon_length)
+    Sum_Depth_Length = np.array(Sum_Depth_Length)
+    result_matrix = np.outer(Exon_length, Sum_Depth_Length)
+    NormFactor = pd.DataFrame(result_matrix)
+    NormFactor.columns = list(Coverage.columns)
+    NormFactor.index = DATA.index.to_list()
+    CNV_ALL = Coverage.div(NormFactor)
+    CNV_ALL = CNV_ALL + 1
+    CNV_ALL = CNV_ALL.applymap(np.log2)
+    CNV_ALL = CNV_ALL.apply(lambda value : value - CNV_ALL.mean(axis=1))
+    DATA = pd.concat([Info, CNV_ALL], axis=1)
+    DATA = DATA[['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand', f'{name}']]
+    DATA.to_csv(f"05.SV/01.GeneCNV/{name}.HBE1.Norm.CNV.txt",
+                sep='\t',
+                index=False,
+                header='infer')
+
+    # command = f"cp 05.SV/01.GeneCNV/{name}.{gene}.bedcov ../Intermediate/"
     # os.system(command)
     
     # WGS_GeneCNV_Concat.Merge(name)

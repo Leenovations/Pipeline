@@ -5,6 +5,13 @@ import glob
 import numpy as np
 #--------------------------------------------------#
 def Merge(Name):
+    Exon = pd.read_csv(f"/media/src/hg19/08.bed/NCBI.RefSeq.Selected.GeneCNV.Chr.X.bed",
+                       sep='\t',
+                       low_memory=False,
+                       header=None)
+    Gene = list(set(Exon.iloc[:, 3].to_list()))
+    Gene.sort()
+
     CNV = glob.glob("../Intermediate/*txt")
     CNV.sort()
 
