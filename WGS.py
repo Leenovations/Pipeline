@@ -536,7 +536,7 @@ def GeneCNV(name):
     Gene = list(set(Gene.iloc[:, 3].to_list()))
     Gene.sort()
 
-    for gene in Gene:
+    for gene in Gene[0:1]:
         command = f"samtools bedcov \
                     /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/{gene}.cnv.bed \
                     03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.{gene}.bedcov"
@@ -544,7 +544,7 @@ def GeneCNV(name):
 
     names = BATCH['Sample.Name'].split(',')
     Dir = BATCH['Sample.Dir'].split(',')
-    for gene in Gene:
+    for gene in Gene[0:1]:
         file_paths = [file + f"05.SV/01.GeneCNV/{name}.{gene}.bedcov" for file, name in zip(Dir, names)]
 
         data_frames = [pd.read_csv(file, 
@@ -555,30 +555,32 @@ def GeneCNV(name):
                                    for file, name in zip(file_paths, names)]
 
         DATA = reduce(lambda left, right: pd.merge(left, right, on=['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand']), data_frames)
-        print(DATA)
-        # Info = DATA.iloc[:, :6]
-        # Coverage = DATA.iloc[:, 6:]
+        Info = DATA.iloc[:, :6]
+        Coverage = DATA.iloc[:, 6:]
 
-        # Exon_length = DATA['End'] - DATA['Start']
-        # Depth_Length = Coverage.apply(lambda count: (count / Exon_length))
-        # Sum_Depth_Length = Depth_Length.sum(axis=0)
+        Exon_length = DATA['End'] - DATA['Start']
+        Depth_Length = Coverage.apply(lambda count: (count / Exon_length))
+        Sum_Depth_Length = Depth_Length.sum(axis=0)
 
-        # Exon_length = np.array(Exon_length)
-        # Sum_Depth_Length = np.array(Sum_Depth_Length)
-        # result_matrix = np.outer(Exon_length, Sum_Depth_Length)
-        # NormFactor = pd.DataFrame(result_matrix)
-        # NormFactor.columns = list(Coverage.columns)
-        # NormFactor.index = DATA.index.to_list()
-        # CNV_ALL = Coverage.div(NormFactor)
-        # CNV_ALL = CNV_ALL + 1
-        # CNV_ALL = CNV_ALL.applymap(np.log2)
-        # CNV_ALL = CNV_ALL.apply(lambda value : value - CNV_ALL.mean(axis=1))
-        # DATA = pd.concat([Info, CNV_ALL], axis=1)
-        # DATA = DATA[['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand', f'{name}']]
-        # DATA.to_csv(f"05.SV/01.GeneCNV/{name}.{gene}.Norm.CNV.txt",
-        #             sep='\t',
-        #             index=False,
-        #             header='infer')
+        Exon_length = np.array(Exon_length)
+        Sum_Depth_Length = np.array(Sum_Depth_Length)
+        result_matrix = np.outer(Exon_length, Sum_Depth_Length)
+        NormFactor = pd.DataFrame(result_matrix)
+        NormFactor.columns = list(Coverage.columns)
+        NormFactor.index = DATA.index.to_list()
+        CNV_ALL = Coverage.div(NormFactor)
+        CNV_ALL = CNV_ALL + 1
+        CNV_ALL = CNV_ALL.applymap(np.log2)
+        CNV_ALL = CNV_ALL.apply(lambda value : value - CNV_ALL.mean(axis=1))
+        DATA = pd.concat([Info, CNV_ALL], axis=1)
+        DATA = DATA[['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand', f'{name}']]
+        DATA.to_csv(f"05.SV/01.GeneCNV/{name}.{gene}.Norm.CNV.txt",
+                    sep='\t',
+                    index=False,
+                    header='infer')
+        
+        command = f"Rscript /labmed/00.Code/Pipeline/WGS.GeneCNV.VIZ.R {name} {gene}"
+        os.system(command)
 #----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')
