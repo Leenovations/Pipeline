@@ -10,8 +10,6 @@ import numpy as np
 import re
 from collections import defaultdict
 from functools import reduce
-
-import WGS_GeneCNV_Concat
 #----------------------------------------------------------------------------------------#
 parser = argparse.ArgumentParser(description="Pipeline Usage")
 args = parser.parse_args()
@@ -544,41 +542,43 @@ def GeneCNV(name):
                     03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.{gene}.bedcov"
         os.system(command)
 
-    Data1 = pd.read_csv(f"/meia/node03-HDD01/03.WGS/00.RawData/SRR10354232/05.SV/01.GeneCNV/SRR10354232.HBE1.bedcov", sep='\t', low_memory=False, header=None,
-                        names = ['Chr', 'Start' , 'End' , 'Gene', 'Exon', 'Strand', f'{name}'])
-    Data2 = pd.read_csv(f"/media/node03-HDD01/03.WGS/00.RawData/SRR10354233/05.SV/01.GeneCNV/SRR10354233.HBE1.bedcov", sep='\t', low_memory=False, header=None,
-                        names = ['Chr', 'Start' , 'End' , 'Gene', 'Exon', 'Strand', 'SRR10354233'])
-    Data3 = pd.read_csv(f"/media/node03-HDD01/03.WGS/00.RawData/SRR10354234/05.SV/01.GeneNV/SRR10354234.HBE1.bedcov", sep='\t', low_memory=False, header=None,
-                        names = ['Chr', 'Start' , 'End' , 'Gene', 'Exon', 'Strand', 'SRR10354234'])
-    
-    DATA = pd.merge(Data1, Data2, on=['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand'])
-    DATA = pd.merge(DATA, Data3, on=['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand'])
+    names = BATCH['Sample.Name'].split(',')
+    Dir = BATCH['Sample.Dir'].split(',')
+    for gene in Gene:
+        file_paths = [file + f"05.SV/01.GeneCNV/{name}.{gene}.bedcov" for file, name in zip(Dir, names)]
 
-    Info = DATA.iloc[:, :6]
-    Coverage = DATA.iloc[:, 6:]
+        data_frames = [pd.read_csv(file, 
+                                   sep='\t', 
+                                   low_memory=False, 
+                                   header=None,
+                                   names=['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand', name])
+                                   for file, name in zip(file_paths, names)]
 
-    Exon_length = DATA['End'] - DATA['Start']
-    Depth_Length = Coverage.apply(lambda count: (count / Exon_length))
-    Sum_Depth_Length = Depth_Length.sum(axis=0)
+        DATA = reduce(lambda left, right: pd.merge(left, right, on=['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand']), data_frames)
+        print(DATA)
+        # Info = DATA.iloc[:, :6]
+        # Coverage = DATA.iloc[:, 6:]
 
-    Exon_length = np.array(Exon_length)
-    Sum_Depth_Length = np.array(Sum_Depth_Length)
-    result_matrix = np.outer(Exon_length, Sum_Depth_Length)
-    NormFactor = pd.DataFrame(result_matrix)
-    NormFactor.columns = list(Coverage.columns)
-    NormFactor.index = DATA.index.to_list()
-    CNV_ALL = Coverage.div(NormFactor)
-    CNV_ALL = CNV_ALL + 1
-    CNV_ALL = CNV_ALL.applymap(np.log2)
-    CNV_ALL = CNV_ALL.apply(lambda value : value - CNV_ALL.mean(axis=1))
-    DATA = pd.concat([Info, CNV_ALL], axis=1)
-    DATA = DATA[['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand', f'{name}']]
-    DATA.to_csv(f"05.SV/01.GeneCNV/{name}.HBE1.Norm.CNV.txt",
-                sep='\t',
-                index=False,
-                header='infer')
-    
-    # WGS_GeneCNV_Concat.Merge(name)
+        # Exon_length = DATA['End'] - DATA['Start']
+        # Depth_Length = Coverage.apply(lambda count: (count / Exon_length))
+        # Sum_Depth_Length = Depth_Length.sum(axis=0)
+
+        # Exon_length = np.array(Exon_length)
+        # Sum_Depth_Length = np.array(Sum_Depth_Length)
+        # result_matrix = np.outer(Exon_length, Sum_Depth_Length)
+        # NormFactor = pd.DataFrame(result_matrix)
+        # NormFactor.columns = list(Coverage.columns)
+        # NormFactor.index = DATA.index.to_list()
+        # CNV_ALL = Coverage.div(NormFactor)
+        # CNV_ALL = CNV_ALL + 1
+        # CNV_ALL = CNV_ALL.applymap(np.log2)
+        # CNV_ALL = CNV_ALL.apply(lambda value : value - CNV_ALL.mean(axis=1))
+        # DATA = pd.concat([Info, CNV_ALL], axis=1)
+        # DATA = DATA[['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand', f'{name}']]
+        # DATA.to_csv(f"05.SV/01.GeneCNV/{name}.{gene}.Norm.CNV.txt",
+        #             sep='\t',
+        #             index=False,
+        #             header='infer')
 #----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')
