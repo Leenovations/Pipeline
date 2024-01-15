@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import re
 from collections import defaultdict
+from functools import reduce
 
 import WGS_GeneCNV_Concat
 #----------------------------------------------------------------------------------------#
@@ -530,30 +531,24 @@ def GeneCNV(name):
         command = "mkdir -p 05.SV/01.GeneCNV"
         os.system(command)
 
-    # Exon = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/NCBI.RefSeq.Selected.GeneCNV.Chr.X.bed",
-    #                    sep='\t',
-    #                    low_memory=False,
-    #                    header=None)
-    # Gene = list(set(Exon.iloc[:, 3].to_list()))
-    # Gene.sort()
+    Gene = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/NCBI.RefSeq.Selected.Gene.bed",
+                       sep='\t',
+                       low_memory=False,
+                       header=None)
+    Gene = list(set(Gene.iloc[:, 3].to_list()))
+    Gene.sort()
 
-    # for gene in Gene:
-    #     Bed = Exon[Exon.iloc[:, 3] == gene]
-    #     Bed.to_csv(f"05.SV/01.GeneCNV/{name}.{gene}.bed",
-    #                sep='\t',
-    #                index=False,
-    #                header=None)
+    for gene in Gene:
+        command = f"samtools bedcov \
+                    /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/{gene}.cnv.bed \
+                    03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.{gene}.bedcov"
+        os.system(command)
 
-    #     command = f"samtools bedcov \
-    #                 05.SV/01.GeneCNV/{name}.{gene}.bed \
-    #                 03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.{gene}.bedcov"
-    #     os.system(command)
-
-    Data1 = pd.read_csv(f"/media/node03-HDD01/03.WGS/00.RawData/SRR10354232/05.SV/01.GeneCNV/SRR10354232.HBE1.bedcov", sep='\t', low_memory=False, header=None,
+    Data1 = pd.read_csv(f"/meia/node03-HDD01/03.WGS/00.RawData/SRR10354232/05.SV/01.GeneCNV/SRR10354232.HBE1.bedcov", sep='\t', low_memory=False, header=None,
                         names = ['Chr', 'Start' , 'End' , 'Gene', 'Exon', 'Strand', f'{name}'])
     Data2 = pd.read_csv(f"/media/node03-HDD01/03.WGS/00.RawData/SRR10354233/05.SV/01.GeneCNV/SRR10354233.HBE1.bedcov", sep='\t', low_memory=False, header=None,
                         names = ['Chr', 'Start' , 'End' , 'Gene', 'Exon', 'Strand', 'SRR10354233'])
-    Data3 = pd.read_csv(f"/media/node03-HDD01/03.WGS/00.RawData/SRR10354234/05.SV/01.GeneCNV/SRR10354234.HBE1.bedcov", sep='\t', low_memory=False, header=None,
+    Data3 = pd.read_csv(f"/media/node03-HDD01/03.WGS/00.RawData/SRR10354234/05.SV/01.GeneNV/SRR10354234.HBE1.bedcov", sep='\t', low_memory=False, header=None,
                         names = ['Chr', 'Start' , 'End' , 'Gene', 'Exon', 'Strand', 'SRR10354234'])
     
     DATA = pd.merge(Data1, Data2, on=['Chr', 'Start', 'End', 'Gene', 'Exon', 'Strand'])
@@ -582,9 +577,6 @@ def GeneCNV(name):
                 sep='\t',
                 index=False,
                 header='infer')
-
-    # command = f"cp 05.SV/01.GeneCNV/{name}.{gene}.bedcov ../Intermediate/"
-    # os.system(command)
     
     # WGS_GeneCNV_Concat.Merge(name)
 #----------------------------------------------------------------------------------------#
