@@ -52,7 +52,7 @@ Xmax <- Exon_graph$End
 
 COV <- ggplot(Coverage, aes(x=Start, y=Coverage)) +
   geom_line(color='purple', group=1) +
-  ggtitle(paste0('\n', gene, '\n')) +
+  ggtitle(paste0('\n', Target_gene, '\n')) +
   xlab('') +
   ylab('Coverage') +
   scale_x_discrete(expand = c(0, 0)) +
@@ -98,6 +98,6 @@ CNV <- ggplot(Normalized, aes(x=Start, y=Norm)) +
   coord_cartesian(ylim = c(-5, 5), expand = T, clip = "off")
 
 Plot <- COV + CNV + plot_layout(ncol = 1, heights = c(4,4))
-ggsave(paste0(Target_path, Sample, '.' ,gene, '.cnv.pdf'),
+ggsave(paste0(Target_path, Sample, '.' ,Target_gene, '.cnv.pdf'),
        width = 10,
        plot=Plot)

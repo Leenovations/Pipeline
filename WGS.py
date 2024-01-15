@@ -536,7 +536,7 @@ def GeneCNV(name):
     Gene = list(set(Gene.iloc[:, 3].to_list()))
     Gene.sort()
 
-    for gene in Gene[0:1]:
+    for gene in Gene:
         command = f"samtools bedcov \
                     /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/{gene}.cnv.bed \
                     03.Align/{name}.bam > 05.SV/01.GeneCNV/{name}.{gene}.bedcov"
@@ -544,7 +544,7 @@ def GeneCNV(name):
 
     names = BATCH['Sample.Name'].split(',')
     Dir = BATCH['Sample.Dir'].split(',')
-    for gene in Gene[0:1]:
+    for gene in Gene:
         file_paths = [file + f"05.SV/01.GeneCNV/{name}.{gene}.bedcov" for file, name in zip(Dir, names)]
 
         data_frames = [pd.read_csv(file, 
