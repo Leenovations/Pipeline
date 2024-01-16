@@ -95,6 +95,10 @@ def bwa(name):
                 samtools view -bS - > 03.Align/{name}.bwa.bam"
     os.system(command)
 #----------------------------------------------------------------------------------------#
+def Bamflt(name):
+    command = f"samtools view -f 2 -bq {BATCH['bq']} 03.Align/{name}.bwa.bam -o 03.Align/{name}.flt.bam"
+    os.system(command)
+#----------------------------------------------------------------------------------------#
 def AddOrReplaceReadGroups(name):
     if os.path.isdir("03.Align"):
         pass
@@ -107,7 +111,7 @@ def AddOrReplaceReadGroups(name):
                 -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
                 -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 AddOrReplaceReadGroups \
-                I=03.Align/{name}.bwa.bam \
+                I=03.Align/{name}.flt.bam \
                 O=03.Align/{name}.sorted.bam \
                 TMP_DIR=TEMP \
                 RGLB=NGS \
@@ -768,6 +772,7 @@ if BATCH["Step"] == "All":
     # PostQC(Name)
     # bwaindex()
     # bwa(Name)
+    # Bamflt(Name)
     # AddOrReplaceReadGroups(Name)
     # markduplicate(Name)
     # makedict()
