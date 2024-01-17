@@ -77,22 +77,22 @@ def PostQC(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def Refindex():
-    if os.path.isdir(f'/media/src/hg{BATCH["Ref.ver"]}/00.RNA/Index/'):
+    if os.path.isdir(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/'):
         pass
     else:
         command = f'STAR --runThreadN {BATCH["CPU"]} --runMode genomeGenerate \
-                    --genomeDir /media/src/hg{BATCH["Ref.ver"]}/00.RNA/Index/ \
+                    --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
                     --sjdbOverhang {BATCH["sjdbOverhang"]} \
-                    --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"]}/00.RNA/hg{BATCH["Ref.ver"]}.GENCODE.v44.annotation.gtf \
-                    --genomeFastaFiles /media/src/hg{BATCH["Ref.ver"]}/hg{BATCH["Ref.ver"]}.GENCODE.fa'
+                    --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.GENCODE.v44.annotation.gtf \
+                    --genomeFastaFiles /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/hg{BATCH["Ref.ver"].split("g")[1]}.GENCODE.fa'
         os.system(command)
 #----------------------------------------------------------------------------------------#
 def STAR(name):
-    command = f'STAR --runThreadN {BATCH["CPU"]} --genomeDir /media/src/hg{BATCH["Ref.ver"]}/00.RNA/Index/ \
+    command = f'STAR --runThreadN {BATCH["CPU"]} --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
                 --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz --readFilesCommand zcat \
                 --outSAMtype BAM Unsorted \
-                --twopassMode {BATCH["quantMode"]} \
-                --quantMode {BATCH["GeneCounts"]} \
+                --twopassMode {BATCH["twopassMode"]} \
+                --quantMode {BATCH["quantMode"]} \
                 --outFilterMultimapNmax {BATCH["FilterMultimapNmax"]} --outFilterMismatchNmax {BATCH["FilterMismatchNmax"]} \
                 --outFileNamePrefix 03.Output/{name}_'
     os.system(command)
@@ -106,8 +106,11 @@ def QC(name, r1, r2):
     else:
         command = 'mkdir 04.QC'
         os.system(command)
+    
+    command = f"samtools view -f 2 -bq {BATCH['bq']} 03.Align/{name}_Aligned.out.bam -o 03.Align/{name}.flt.bam"
+    os.system(command)
 
-    command = f'samtools sort 03.Output/{name}_Aligned.out.bam -o 03.Output/{name}_Sorted.out.bam'
+    command = f'samtools sort 03.Output/{name}.flt.bam -o 03.Output/{name}_Sorted.out.bam'
     os.system(command)
 
     command = f'samtools index 03.Output/{name}_Sorted.out.bam'
@@ -116,7 +119,7 @@ def QC(name, r1, r2):
     command = f'mv 03.Output/{name}_Log.final.out 04.QC/'
     os.system(command)
 
-    command = f'samtools stats 03.Output/{name}_Aligned.out.bam > 04.QC/{name}.stats'
+    command = f'samtools stats 03.Output/{name}_Sorted.out.bam > 04.QC/{name}.stats'
     os.system(command)
 
     command = f'samtools stats -t /Bioinformatics/01.Reference/Panel/rna.gene.bed 03.Output/{name}_Sorted.out.bam > 04.QC/{name}.Ontarget.stats'
@@ -130,9 +133,6 @@ def QC(name, r1, r2):
 
     command = f'samtools depth -b /Bioinformatics/01.Reference/Panel/BCR-ABL1.bed \
                 03.Output/{name}_Sorted.out.bam > 04.QC/{name}.Target.Depth.txt'
-    os.system(command)
-
-    command = f'FxTools_Linux Fqtools fqcheck -i {r1} {r2} -o 04.QC/{name}.R1 04.QC/{name}.R2'
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def QCPDF(name):
@@ -308,13 +308,13 @@ def QCPDF(name):
 #----------------------------------------------------------------------------------------#
 #RUN Pipeline
 if BATCH["Step"] == 'All':
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    Refindex()
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # Refindex()
     STAR(Name)
-    QC(Name, R1, R2)
-    QCPDF(Name)
+    # QC(Name, R1, R2)
+    # QCPDF(Name)
     # Fusion(Name)
 elif BATCH["Step"] == 'FastQC':
     PreQC(R1, R2)
