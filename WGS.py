@@ -504,7 +504,7 @@ def ChromosomalCNV(name):
                     names = ['Chr', 'Start', 'End', 'Count'],
                     low_memory=False)
     
-    Data['Length'] = Data['End'] - Data['Start'] + 1
+    Data['Length'] = Data['End'] - Data['Start']
     Data['count_per_length'] = Data['Count'] / Data['Length']
     Data['TPM'] = Data['Count'] / Data['Length'] * Data['count_per_length']
     Data['TPM'] = np.log10(Data['TPM'] + 1)
