@@ -97,7 +97,7 @@ def STAR(name):
                 --outFileNamePrefix 03.Output/{name}_'
     os.system(command)
 
-    command = f'cp 03.Output/{name}_ReadsPerGene.out.tab ../Results/00.Reads/'
+    command = f'cp 03.Output/{name}_ReadsPerGene.out.tab ../Genecount/'
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def QC(name, r1, r2):
@@ -107,10 +107,7 @@ def QC(name, r1, r2):
         command = 'mkdir 04.QC'
         os.system(command)
     
-    command = f"samtools view -f 2 -bq {BATCH['bq']} 03.Align/{name}_Aligned.out.bam -o 03.Align/{name}.flt.bam"
-    os.system(command)
-
-    command = f'samtools sort 03.Output/{name}.flt.bam -o 03.Output/{name}_Sorted.out.bam'
+    command = f'samtools sort 03.Output/{name}_Aligned.out.bam -o 03.Output/{name}_Sorted.out.bam'
     os.system(command)
 
     command = f'samtools index 03.Output/{name}_Sorted.out.bam'
@@ -122,17 +119,14 @@ def QC(name, r1, r2):
     command = f'samtools stats 03.Output/{name}_Sorted.out.bam > 04.QC/{name}.stats'
     os.system(command)
 
-    command = f'samtools stats -t /Bioinformatics/01.Reference/Panel/rna.gene.bed 03.Output/{name}_Sorted.out.bam > 04.QC/{name}.Ontarget.stats'
+    command = f'samtools stats -t /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/04.cnv/NCBI.RefSeq.Selected.Gene.bed \
+                03.Output/{name}_Sorted.out.bam > 04.QC/{name}.Ontarget.stats'
     os.system(command)
 
     command = f'samtools flagstat 03.Output/{name}_Sorted.out.bam > 04.QC/{name}.Depth.txt'
     os.system(command)
 
     command = f'samtools depth 03.Output/{name}_Sorted.out.bam > 04.QC/{name}.Total.Depth.txt'
-    os.system(command)
-
-    command = f'samtools depth -b /Bioinformatics/01.Reference/Panel/BCR-ABL1.bed \
-                03.Output/{name}_Sorted.out.bam > 04.QC/{name}.Target.Depth.txt'
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def QCPDF(name):
@@ -235,18 +229,6 @@ def QCPDF(name):
     Percent = str(round(int(Mapped_read)/int(Total_read)*100))
     Ontarget = str(round(int(Target_Mapped_read)/int(Mapped_read)*100))
 
-    with open(f'04.QC/{name}.Target.Depth.txt', 'r') as handle:
-        Num = 0
-        Total_Depth = 0
-        for line in handle:
-            line = line.strip()
-            splitted = line.split('\t')
-            Depth = int(splitted[2])
-            Num += 1
-            Total_Depth += Depth
-
-        Total_AVG_Depth = str(round(Total_Depth/Num, 2))
-
     pdf.set_font("helvetica", size = 11)
     pdf.set_xy(20, 175)
     pdf.set_fill_color(r = 150, g = 150, b = 150)
@@ -270,11 +252,9 @@ def QCPDF(name):
 
     pdf.set_xy(20, 215)
     pdf.set_fill_color(r = 150, g = 150, b = 150)
-    pdf.cell(85.5,10, txt = 'Average Depth', align = 'C', border=1, ln=0, fill = True)
-    pdf.cell(85.5,10, txt = 'Ontarget %', align = 'C', border=1, fill = True)
+    pdf.cell(171,10, txt = 'Ontarget %', align = 'C', border=1, fill = True)
     pdf.set_xy(20, 225)
-    pdf.cell(85.5,10, txt = Total_AVG_Depth, align = 'C', border=1)
-    pdf.cell(85.5,10, txt = Ontarget + ' %', align = 'C', border=1)
+    pdf.cell(171,10, txt = Ontarget + ' %', align = 'C', border=1)
 
 #Category 4 
     pdf.set_font("helvetica", style = 'B', size = 12)
@@ -301,20 +281,16 @@ def QCPDF(name):
     pdf.cell(57,10, txt = Info[list(Info.keys())[-1]], align = 'C', border=1)
 
 # save the pdf
-    pdf.output(f"03.Output/{name}_QC.pdf")
-    
-    command = f'ln 03.Output/{name}_QC.pdf ../Results/{name}_QC.pdf'
-    os.system(command)
+    pdf.output(f"04.QC/{name}_QC.pdf")
 #----------------------------------------------------------------------------------------#
-#RUN Pipeline
 if BATCH["Step"] == 'All':
-    # PreQC(R1, R2)
-    # Trimming(Name, R1, R2)
-    # PostQC(Name)
-    # Refindex()
+    PreQC(R1, R2)
+    Trimming(Name, R1, R2)
+    PostQC(Name)
+    Refindex()
     STAR(Name)
-    # QC(Name, R1, R2)
-    # QCPDF(Name)
+    QC(Name, R1, R2)
+    QCPDF(Name)
     # Fusion(Name)
 elif BATCH["Step"] == 'FastQC':
     PreQC(R1, R2)
