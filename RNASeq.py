@@ -307,13 +307,13 @@ def QCPDF(name):
     pdf.output(f"04.QC/{name}_QC.pdf")
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == 'All':
-    # PreQC(R1, R2)
-    # Trimming(Name, R1, R2)
-    # PostQC(Name)
-    # Refindex()
+    PreQC(R1, R2)
+    Trimming(Name, R1, R2)
+    PostQC(Name)
+    Refindex()
     STAR(Name)
-    # QC(Name, R1, R2)
-    # QCPDF(Name)
+    QC(Name, R1, R2)
+    QCPDF(Name)
     # Fusion(Name)
 elif BATCH["Step"] == 'FastQC':
     PreQC(R1, R2)
