@@ -92,10 +92,29 @@ def STAR(name):
                 --quantMode {BATCH["quantMode"]} \
                 --outFilterMultimapNmax {BATCH["FilterMultimapNmax"]} --outFilterMismatchNmax {BATCH["FilterMismatchNmax"]} \
                 --outFileNamePrefix 03.Output/{name}_'
-    os.system(command)
+    # os.system(command)
 
-    command = f'cp 03.Output/{name}_ReadsPerGene.out.tab ../Genecount/'
-    os.system(command)
+    Gene = pd.read_csv(f"/media/src/hg19/00.RNA/Index/geneInfo.tab", sep='\t', header=None)
+
+    column_dict = {}
+    for index, row in Gene.iterrows():
+        column_dict[row[0]] = row[1]
+
+    Genecount = pd.read_csv(f"03.Output/{name}_ReadsPerGene.out.tab", sep='\t', header=None, names=['ID', 0, 1, 2])
+    Genecount = Genecount.drop(index=range(0, 4))
+    Genecount['ID'] = [column_dict[key] for key in Genecount['ID']]
+    Genecount = Genecount[['ID', int(BATCH["Stranded"])]]
+
+    Genecount.to_csv(f"03.Output/{name}.Genecount.txt", sep='\t', header=None, names=['GeneSymbol', f"{name}"])
+
+        # command = f'cp 03.Output/{name}_ReadsPerGene.out.tab ../Genecount/'
+        # os.system(command)
+    
+    # if BATCH["TPM"] == "Y":
+    #     pass
+
+    # if BATCH["FPKM"] == "Y":
+    #     pass
 #----------------------------------------------------------------------------------------#
 def QC(name, r1, r2):
     if os.path.isdir('04.QC/'):
@@ -281,13 +300,13 @@ def QCPDF(name):
     pdf.output(f"04.QC/{name}_QC.pdf")
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == 'All':
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    Refindex()
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # Refindex()
     STAR(Name)
-    QC(Name, R1, R2)
-    QCPDF(Name)
+    # QC(Name, R1, R2)
+    # QCPDF(Name)
     # Fusion(Name)
 elif BATCH["Step"] == 'FastQC':
     PreQC(R1, R2)
