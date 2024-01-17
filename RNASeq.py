@@ -13,14 +13,11 @@ import glob
 from collections import defaultdict
 from fpdf import FPDF
 from datetime import datetime
-
+#----------------------------------------------------------------------------------------#
 Start_time = time.time()
 dt = datetime.now()
-
+#----------------------------------------------------------------------------------------#
 parser = argparse.ArgumentParser(description='Pipeline Usage')
-# parser.add_argument('1', metavar='<38 or 19>' ,help='Select Reference version')
-# parser.add_argument('2', metavar='<Core>' ,help='Set Core')
-# parser.add_argument('3', metavar='<Step>' ,help='All, STAR, Mutation, QC')
 args = parser.parse_args()
 #----------------------------------------------------------------------------------------#
 Sample = pd.read_csv('SampleSheet.txt', sep='\t', header=None)
