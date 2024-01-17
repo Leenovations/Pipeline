@@ -95,32 +95,33 @@ def STAR(name):
                 --outFileNamePrefix 03.Output/{name}_'
     # os.system(command)
 
-    # Gene = pd.read_csv(f"/media/src/hg19/00.RNA/Index/geneInfo.tab", sep='\t', header=None)
-    # column_dict = {}
-    # for index, row in Gene.iterrows():
-    #     column_dict[row[0]] = row[1]
+    Gene = pd.read_csv(f"/media/src/hg19/00.RNA/Index/geneInfo.tab", sep='\t', header=None)
+    column_dict = {}
+    for index, row in Gene.iterrows():
+        column_dict[row[0]] = row[1]
 
-    # Genecount = pd.read_csv(f"03.Output/{name}_ReadsPerGene.out.tab", sep='\t', header=None, names=['ID', 0, 1, 2])
-    # Genecount = Genecount.drop(index=range(0, 4))
-    # Genecount['ID'] = [column_dict[key] for key in Genecount['ID']]
-    # Genecount = Genecount[['ID', int(BATCH["Stranded"])]]
-    # Genecount.columns = ['GeneSymbol', f"{name}"]
-    # Genecount.to_csv(f"03.Output/{name}.Genecount.txt", sep='\t', header='infer', index=False)
+    Genecount = pd.read_csv(f"03.Output/{name}_ReadsPerGene.out.tab", sep='\t', header=None, names=['ID', 0, 1, 2])
+    Genecount = Genecount.drop(index=range(0, 4))
+    Genecount['ID'] = [column_dict[key] for key in Genecount['ID']]
+    Genecount = Genecount[['ID', int(BATCH["Stranded"])]]
+    Genecount.columns = ['GeneSymbol', f"{name}"]
+    Genecount.to_csv(f"03.Output/{name}.Genecount.txt", sep='\t', header='infer', index=False)
+
+    names = BATCH['Sample.Name'].split(',')
+    Dir = BATCH['Sample.Dir'].split(',')
+    file_paths = [file + f"03.Output/{sample}.Genecount.txt" for file, sample in zip(Dir, names)]
+
+    data_frames = [pd.read_csv(file, 
+                            sep='\t', 
+                            header='infer')
+                            for file, sample in zip(file_paths, names)]
+    DATA = reduce(lambda left, right: pd.merge(left, right, on=['GeneSymbol']), data_frames)
+    DATA.to_csv(f"../Genecount/Total.Genecount.txt", sep='\t', header='infer', index=False)
 
     if BATCH["TPM"] == "Y":
-        names = BATCH['Sample.Name'].split(',')
-        Dir = BATCH['Sample.Dir'].split(',')
-        file_paths = [file + f"03.Output/{sample}.Genecount.txt" for file, sample in zip(Dir, names)]
-
-        data_frames = [pd.read_csv(file, 
-                                sep='\t', 
-                                header='infer')
-                                for file, sample in zip(file_paths, names)]
-        DATA = reduce(lambda left, right: pd.merge(left, right, on=['GeneSymbol']), data_frames)
-        DATA.to_csv(f"../Genecount/Total.Genecount.txt", sep='\t', header='infer', index=False)
-
-    # if BATCH["FPKM"] == "Y":
-    #     pass
+        pass
+    if BATCH["FPKM"] == "Y":
+        pass
 #----------------------------------------------------------------------------------------#
 def QC(name, r1, r2):
     if os.path.isdir('04.QC/'):
