@@ -18,16 +18,24 @@ Start_time = time.time()
 dt = datetime.now()
 
 parser = argparse.ArgumentParser(description='Pipeline Usage')
-parser.add_argument('1', metavar='<38 or 19>' ,help='Select Reference version')
-parser.add_argument('2', metavar='<Core>' ,help='Set Core')
-parser.add_argument('3', metavar='<Step>' ,help='All, STAR, Mutation, QC')
+# parser.add_argument('1', metavar='<38 or 19>' ,help='Select Reference version')
+# parser.add_argument('2', metavar='<Core>' ,help='Set Core')
+# parser.add_argument('3', metavar='<Step>' ,help='All, STAR, Mutation, QC')
 args = parser.parse_args()
 #----------------------------------------------------------------------------------------#
 Sample = pd.read_csv('SampleSheet.txt', sep='\t', header=None)
 Name = Sample.iloc[0,0]
 R1 = Sample.iloc[0,1]
 R2 = Sample.iloc[0,2]
-print(R1, R2)
+#----------------------------------------------------------------------------------------#
+BATCH = {}
+with open(f"{Name}.batch.config", "r") as batch:
+    for line in batch:
+        line = line.strip()
+        splitted = line.split("=")
+        Key = splitted[0]
+        Value = splitted[1]
+        BATCH[Key] = Value
 #----------------------------------------------------------------------------------------#
 def PreQC(r1, r2):
     if os.path.isdir('00.PreQC'):
@@ -36,8 +44,8 @@ def PreQC(r1, r2):
         command = 'mkdir 00.PreQC'
         os.system(command)
 
-    command =f'fastqc -o 00.PreQC\
-            -t {int(sys.argv[2])*2}\
+    command =f'fastqc -o 00.PreQC \
+            -t {BATCH["CPU"]}\
             {r1}\
             {r2}'
     os.system(command)
@@ -50,7 +58,7 @@ def Trimming(name, r1, r2):
         os.system(command)
 
     command = f'trim_galore --paired --gzip \
-                -j {int(sys.argv[2])*2} \
+                -j {BATCH["CPU"]} \
                 -o 02.Trimmed --basename {name} \
                 {r1} {r2}'
     os.system(command)
@@ -63,29 +71,29 @@ def PostQC(name):
         os.system(command)
 
     command = f'fastqc -o 01.PostQC \
-                -t {int(sys.argv[2])*2} \
+                -t {BATCH["CPU"]} \
                 02.Trimmed/{name}_val_1.fq.gz \
                 02.Trimmed/{name}_val_2.fq.gz'
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def Refindex():
-    if os.path.isdir(f'/media/src/hg{sys.argv[1]}/00.RNA/Index/'):
+    if os.path.isdir(f'/media/src/hg{BATCH["Ref.ver"]}/00.RNA/Index/'):
         pass
     else:
-        command = f'STAR --runThreadN {sys.argv[2]} --runMode genomeGenerate \
-                    --genomeDir /media/src/hg{sys.argv[1]}/00.RNA/Index/ \
-                    --sjdbOverhang 100 \
-                    --sjdbGTFfile /media/src/hg{sys.argv[1]}/00.RNA/hg{sys.argv[1]}.GENCODE.v44.annotation.gtf \
-                    --genomeFastaFiles /media/src/hg{sys.argv[1]}/hg{sys.argv[1]}.GENCODE.fa'
+        command = f'STAR --runThreadN {BATCH["CPU"]} --runMode genomeGenerate \
+                    --genomeDir /media/src/hg{BATCH["Ref.ver"]}/00.RNA/Index/ \
+                    --sjdbOverhang {BATCH["sjdbOverhang"]} \
+                    --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"]}/00.RNA/hg{BATCH["Ref.ver"]}.GENCODE.v44.annotation.gtf \
+                    --genomeFastaFiles /media/src/hg{BATCH["Ref.ver"]}/hg{BATCH["Ref.ver"]}.GENCODE.fa'
         os.system(command)
 #----------------------------------------------------------------------------------------#
 def STAR(name):
-    command = f'STAR --runThreadN {int(sys.argv[2])*2} --genomeDir /media/src/hg{sys.argv[1]}/00.RNA/Index/ \
+    command = f'STAR --runThreadN {BATCH["CPU"]} --genomeDir /media/src/hg{BATCH["Ref.ver"]}/00.RNA/Index/ \
                 --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz --readFilesCommand zcat \
                 --outSAMtype BAM Unsorted \
-                --twopassMode Basic \
-                --quantMode GeneCounts \
-                --outFilterMultimapNmax 1 --outFilterMismatchNmax 10 \
+                --twopassMode {BATCH["quantMode"]} \
+                --quantMode {BATCH["GeneCounts"]} \
+                --outFilterMultimapNmax {BATCH["FilterMultimapNmax"]} --outFilterMismatchNmax {BATCH["FilterMismatchNmax"]} \
                 --outFileNamePrefix 03.Output/{name}_'
     os.system(command)
 
@@ -239,9 +247,6 @@ def QCPDF(name):
 
         Total_AVG_Depth = str(round(Total_Depth/Num, 2))
 
-    #R1_Phred_Score = os.popen(f"tail -n 1 04.QC/{name}.R1.fqcheck").read().strip().split('\t')[3]
-    #R2_Phred_Score = os.popen(f"tail -n 1 04.QC/{name}.R2.fqcheck").read().strip().split('\t')[3]
-
     pdf.set_font("helvetica", size = 11)
     pdf.set_xy(20, 175)
     pdf.set_fill_color(r = 150, g = 150, b = 150)
@@ -267,11 +272,9 @@ def QCPDF(name):
     pdf.set_fill_color(r = 150, g = 150, b = 150)
     pdf.cell(85.5,10, txt = 'Average Depth', align = 'C', border=1, ln=0, fill = True)
     pdf.cell(85.5,10, txt = 'Ontarget %', align = 'C', border=1, fill = True)
-    #pdf.cell(57,10, txt = 'Phred score(Q>=30, R1 | R2)', align = 'C', border=1, ln=0, fill = True)
     pdf.set_xy(20, 225)
     pdf.cell(85.5,10, txt = Total_AVG_Depth, align = 'C', border=1)
     pdf.cell(85.5,10, txt = Ontarget + ' %', align = 'C', border=1)
-    #pdf.cell(57,10, txt = R1_Phred_Score + ' | ' + R2_Phred_Score, align = 'C', border=1)
 
 #Category 4 
     pdf.set_font("helvetica", style = 'B', size = 12)
@@ -304,26 +307,26 @@ def QCPDF(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 #RUN Pipeline
-if sys.argv[3] == 'All':
+if BATCH["Step"] == 'All':
     PreQC(R1, R2)
     Trimming(Name, R1, R2)
     PostQC(Name)
     Refindex()
     STAR(Name)
     QC(Name, R1, R2)
-    # QCPDF(Name)
+    QCPDF(Name)
     # Fusion(Name)
-elif sys.argv[3] == 'FastQC':
+elif BATCH["Step"] == 'FastQC':
     PreQC(R1, R2)
     Trimming(Name, R1, R2)
     PostQC(Name)
-elif sys.argv[3] == 'Align':
+elif BATCH["Step"] == 'Align':
     Trimming(Name, R1, R2)
     Refindex()
     STAR(Name)
-elif sys.argv[3] == 'Fusion':
+elif BATCH["Step"] == 'Fusion':
     Trimming(Name, R1, R2)
     STAR(Name)
     # Fusion(Name)
-elif sys.argv[3] == 'Indexing':
+elif BATCH["Step"] == 'Indexing':
     Refindex()
