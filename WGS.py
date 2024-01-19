@@ -119,7 +119,7 @@ def AddOrReplaceReadGroups(name):
                 RGPU={name} \
                 RGSM={name} \
                 CREATE_INDEX=true \
-                VALIDATION_STRINGENCY=LENIENT \
+                VALIDATION_STRINGENCY={BATCH['Stringency']} \
                 SO=coordinate"
     os.system(command)
 #----------------------------------------------------------------------------------------#
@@ -140,7 +140,7 @@ def markduplicate(name):
                 M=03.Align/{name}.MarkDuplicatesSpark.metrics.txt \
                 TMP_DIR=TEMP \
                 REMOVE_DUPLICATES=true \
-                VALIDATION_STRINGENCY=LENIENT \
+                VALIDATION_STRINGENCY={BATCH['Stringency']} \
                 AS=true"
     os.system(command)
 #----------------------------------------------------------------------------------------#
@@ -362,8 +362,8 @@ def varscan2(name):
 
     command = f"java -jar /Bioinformatics/00.Tools/varscan-2.4.5/VarScan.v2.4.1.jar \
                 mpileup2cns 03.Align/{name}.mpileup \
-                --min-avg-qual 20 --min-coverage 10 --min-reads2 3 \
-                --min-var-freq 0.001 --variants \
+                --min-avg-qual 20 --min-coverage 5 --min-reads2 3 \
+                --min-var-freq 0.01 --variants \
                 --output-vcf 1 > 03.Align/{name}.varscan2.vcf"
     os.system(command)
 #----------------------------------------------------------------------------------------#
@@ -415,75 +415,7 @@ def SV(name):
     command = f"bcftools view \
                -i 'FILTER=\'PASS\' & INFO/SVTYPE!=\'DEL\' & INFO/SVTYPE!=\'INS\' & INFO/SVTYPE!=\'DUP\' & INFO/SVTYPE!=\'INV\'' \
                04.SV/{Name}.sv.vcf.gz > 04.SV/{Name}.sv.filtered.vcf"
-    os.system(command)
-#----------------------------------------------------------------------------------------#
-def ChromosomeCNV(name):
-    if os.path.isdir("04.SV"):
-        pass
-    else:
-        command = "mkdir 04.SV"
-        os.system(command)
-
-    if os.path.exists(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.bed"):
-        pass
-    else:
-        command = f"cnvkit.py access \
-                    /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
-                    -o /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.bed"
-        os.system(command)
-
-    #Run each sample & merge all cnn & time delay
-    # command = f"cnvkit.py autobin \
-    #             03.Align/{name}.bam \
-    #             -t /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/whole.exome.exon.bed \
-    #             -g /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/access.hg{BATCH['Ref.ver'].split('g')[1]}.bed \
-    #             --target-output-bed 04.SV/CNV.target.bed \
-    #             --antitarget-output-bed 04.SV/CNV.antitarget.bed"
-    # os.system(command)
-
-    # command = f"cnvkit.py coverage \
-    #             03.Align/{name}.bam \
-    #             04.SV/CNV.target.bed \
-    #             -o 04.SV/{name}.targetcoverage.cnn"
-    # os.system(command)
-
-    # command = f"cnvkit.py coverage \
-    #             03.Align/{name}.bam \
-    #             04.SV/CNV.antitarget.bed \
-    #             -o 04.SV/{name}.antitargetcoverage.cnn"
-    # os.system(command)
-
-    command = f"cnvkit.py reference \
-                04.SV/{name}.targetcoverage.cnn \
-                04.SV/{name}.antitargetcoverage.cnn \
-                -f /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
-                -o 04.SV/Reference.cnn"
-    os.system(command)
-
-    command = f"cnvkit.py fix \
-                04.SV/{name}.targetcoverage.cnn \
-                04.SV/{name}.antitargetcoverage.cnn \
-                04.SV/Reference.cnn \
-                -o 04.SV/{name}.cnr"
-    os.system(command)
-
-    command = f"cnvkit.py segment \
-                04.SV/{name}.cnr \
-                -o 04.SV/{name}.cns"
-    os.system(command)
-
-    command = f"cnvkit.py scatter \
-                04.SV/{name}.cnr \
-                -s 04.SV/{name}.cns \
-                -o 04.SV/{name}.whole.pdf"
-    os.system(command)            
-
-    command = f"cnvkit.py scatter \
-                -s 04.SV/{name}.cnr \
-                -s 04.SV/{name}.cns \
-                -o 04.SV/{name}.BCR.scatter.pdf \
-                -g BCR"
-    os.system(command)                
+    os.system(command)       
 #----------------------------------------------------------------------------------------#
 def ChromosomalCNV(name):
     if os.path.isdir("05.SV/00.ChromosomeCNV"):
@@ -767,27 +699,33 @@ def Results(name):
     writer.save()
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == "All":
-    # PreQC(R1, R2)
-    # Trimming(Name, R1, R2)
-    # PostQC(Name)
-    # bwaindex()
-    # bwa(Name)
-    # Bamflt(Name)
-    # AddOrReplaceReadGroups(Name)
-    # markduplicate(Name)
-    # makedict()
-    # baserecalibrator(Name)
-    # applyBQSR(Name)
-    # haplotypecaller(Name)
-    # Variantfilter(Name)
-    # mutect2(Name)
-    # varscan2(Name)
-    # Annotation(Name)
-    # SV(Name)
-    # ChromosomeCNV(Name)
-    # ChromosomalCNV(Name)
-    GeneCNV(Name)
-    # Results(Name)
+    PreQC(R1, R2)
+    Trimming(Name, R1, R2)
+    PostQC(Name)
+    bwaindex()
+    bwa(Name)
+    Bamflt(Name)
+    AddOrReplaceReadGroups(Name)
+    markduplicate(Name)
+    makedict()
+    baserecalibrator(Name)
+    applyBQSR(Name)
+    if BATCH['Germline'] == 'Y':
+        haplotypecaller(Name)
+        Variantfilter(Name)
+        Annotation(Name)
+        SV(Name)
+        ChromosomalCNV(Name)
+        GeneCNV(Name)
+        Results(Name)
+    elif BATCH['Somatic'] == 'Y':
+        mutect2(Name)
+        varscan2(Name)
+        Annotation(Name)
+        SV(Name)
+        ChromosomalCNV(Name)
+        GeneCNV(Name)
+        Results(Name)
 elif BATCH["Step"] == "FastQC":
     PreQC(R1, R2)
     Trimming(Name, R1, R2)
