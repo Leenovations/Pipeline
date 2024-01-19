@@ -108,7 +108,7 @@ def AddOrReplaceReadGroups(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 AddOrReplaceReadGroups \
                 I=03.Align/{name}.flt.bam \
@@ -132,7 +132,7 @@ def markduplicate(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 MarkDuplicates \
                 I=03.Align/{name}.sorted.bam \
@@ -163,7 +163,7 @@ def baserecalibrator(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 BaseRecalibrator \
                 -I 03.Align/{name}.MarkDuplicate.bam \
@@ -183,7 +183,7 @@ def applyBQSR(name):
     
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 ApplyBQSR \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -201,7 +201,7 @@ def haplotypecaller(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 HaplotypeCaller \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -215,7 +215,7 @@ def haplotypecaller(name):
 def Variantfilter(name):
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 GenotypeGVCFs \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -225,7 +225,7 @@ def Variantfilter(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 SelectVariants \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -236,7 +236,7 @@ def Variantfilter(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 SelectVariants \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -247,7 +247,7 @@ def Variantfilter(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 VariantFiltration \
                 -V 03.Align/{name}.SNPs.vcf \
@@ -263,7 +263,7 @@ def Variantfilter(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 VariantFiltration \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -277,7 +277,7 @@ def Variantfilter(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 SortVcf \
                 -I 03.Align/{name}.SNPs.flt.vcf \
@@ -297,7 +297,7 @@ def mutect2(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 Mutect2 \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -314,7 +314,7 @@ def mutect2(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 GetPileupSummaries \
                 -I 03.Align/{name}.bam \
@@ -325,7 +325,7 @@ def mutect2(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 CalculateContamination \
                 -I 03.Align/{name}.getpileupsummaries.table \
@@ -334,7 +334,7 @@ def mutect2(name):
 
     command = f"java \
                 -Xmx32G \
-                -XX:ParallelGCThreads={str(2*int({BATCH['CPU']}))} \
+                -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 FilterMutectCalls \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -704,15 +704,15 @@ def Results(name):
     writer.save()
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == "All":
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    bwaindex()
-    bwa(Name)
-    Bamflt(Name)
-    AddOrReplaceReadGroups(Name)
-    markduplicate(Name)
-    makedict()
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # bwaindex()
+    # bwa(Name)
+    # Bamflt(Name)
+    # AddOrReplaceReadGroups(Name)
+    # markduplicate(Name)
+    # makedict()
     baserecalibrator(Name)
     applyBQSR(Name)
     if BATCH['Germline'] == 'Y':
