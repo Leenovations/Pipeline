@@ -745,5 +745,5 @@ elif BATCH["Step"] == "Mutation":
 elif BATCH["Step"] == "SV":
     SV(Name)
 elif BATCH["Step"] == "ChromosomeCNV":
-    ChromosomeCNV(Name)
+    pass
 #----------------------------------------------------------------------------------------#
