@@ -517,6 +517,11 @@ def GeneCNV(name):
         
         command = f"Rscript /labmed/00.Code/Pipeline/WGS.GeneCNV.VIZ.R {name} {gene}"
         os.system(command)
+
+    command = f"rm -rf 05.SV/01.GeneCNV/*.bedcov"
+    os.system(command)
+    command = f"rm -rf 05.SV/01.GeneCNV/*.Norm.CNV.txt "
+    os.system(command)
 #----------------------------------------------------------------------------------------#
 def Results(name):
     clinvar = pd.read_csv(f"/media/src/hg{BATCH['Ref.ver'].split('g')[1]}/a.clinvar.guideline.txt", sep='\t')
