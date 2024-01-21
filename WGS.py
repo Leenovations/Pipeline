@@ -425,7 +425,7 @@ def ChromosomalCNV(name):
         os.system(command)
     
     command = f"samtools bedcov \
-                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/01.Methylation/00.Bed/1MB.exclude.centromere.bed \
+                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/1MB.exclude.centromere.bed \
                 03.Align/{name}.bam > 05.SV/00.ChromosomeCNV/{name}.bedcov"
     os.system(command)
 
