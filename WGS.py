@@ -713,7 +713,7 @@ if BATCH["Step"] == "All":
     # AddOrReplaceReadGroups(Name)
     # markduplicate(Name)
     # makedict()
-    baserecalibrator(Name)
+    # baserecalibrator(Name)
     applyBQSR(Name)
     if BATCH['Germline'] == 'Y':
         haplotypecaller(Name)
