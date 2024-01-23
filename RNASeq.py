@@ -86,7 +86,7 @@ def Refindex():
         os.system(command)
 #----------------------------------------------------------------------------------------#
 def STAR(name):
-    command = f'STAR --runThreadN {BATCH["CPU"]} --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
+    command = f'/media/src/Tools/STAR-2.7.11a/source/STAR --runThreadN {BATCH["CPU"]} --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
                 --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz --readFilesCommand zcat \
                 --outSAMtype BAM Unsorted \
                 --outFilterScoreMin {BATCH["FilterScoreMin"]} \
@@ -337,10 +337,10 @@ def QCPDF(name):
     pdf.output(f"04.QC/{name}_QC.pdf")
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == 'All':
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    Refindex()
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # Refindex()
     STAR(Name)
     QC(Name, R1, R2)
     QCPDF(Name)
