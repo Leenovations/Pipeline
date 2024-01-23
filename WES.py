@@ -36,7 +36,6 @@ def PreQC(r1, r2):
         os.system(command)
 
     command =f"fastqc -o 00.PreQC \
-            -t {BATCH['CPU']} \
             {r1}\
             {r2}"
     os.system(command)
@@ -62,7 +61,6 @@ def PostQC(name):
         os.system(command)
 
     command = f"fastqc -o 01.PostQC \
-                -t {BATCH['CPU']} \
                 02.Trimmed/{name}_val_1.fq.gz \
                 02.Trimmed/{name}_val_2.fq.gz"
     os.system(command)
@@ -107,7 +105,7 @@ def AddOrReplaceReadGroups(name):
         os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 AddOrReplaceReadGroups \
@@ -131,7 +129,7 @@ def markduplicate(name):
         os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 MarkDuplicates \
@@ -161,8 +159,11 @@ def baserecalibrator(name):
         command = "mkdir 03.Align"
         os.system(command)
 
+    command = f"samtools index 03.Align/{name}.MarkDuplicate.bam"
+    os.system(command)
+
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 BaseRecalibrator \
@@ -183,7 +184,7 @@ def applyBQSR(name):
         os.system(command)
     
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 ApplyBQSR \
@@ -202,7 +203,7 @@ def haplotypecaller(name):
         os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 HaplotypeCaller \
@@ -217,7 +218,7 @@ def haplotypecaller(name):
 #----------------------------------------------------------------------------------------#
 def Variantfilter(name):
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 GenotypeGVCFs \
@@ -228,7 +229,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 SelectVariants \
@@ -240,7 +241,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 SelectVariants \
@@ -252,7 +253,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 VariantFiltration \
@@ -269,7 +270,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 VariantFiltration \
@@ -284,7 +285,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 SortVcf \
@@ -304,7 +305,7 @@ def mutect2(name):
         os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 Mutect2 \
@@ -321,7 +322,7 @@ def mutect2(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 GetPileupSummaries \
@@ -332,7 +333,7 @@ def mutect2(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 CalculateContamination \
@@ -341,7 +342,7 @@ def mutect2(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 FilterMutectCalls \
@@ -712,17 +713,17 @@ def Results(name):
     writer.save()
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == "All":
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    bwaindex()
-    bwa(Name)
-    Bamflt(Name)
-    AddOrReplaceReadGroups(Name)
-    markduplicate(Name)
-    makedict()
-    baserecalibrator(Name)
-    applyBQSR(Name)
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # bwaindex()
+    # bwa(Name)
+    # Bamflt(Name)
+    # AddOrReplaceReadGroups(Name)
+    # markduplicate(Name)
+    # makedict()
+    # baserecalibrator(Name)
+    # applyBQSR(Name)
     if BATCH['Germline'] == 'Y':
         haplotypecaller(Name)
         Variantfilter(Name)

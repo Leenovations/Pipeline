@@ -107,7 +107,7 @@ def AddOrReplaceReadGroups(name):
         os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 AddOrReplaceReadGroups \
@@ -131,7 +131,7 @@ def markduplicate(name):
         os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                 MarkDuplicates \
@@ -162,7 +162,7 @@ def baserecalibrator(name):
         os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 BaseRecalibrator \
@@ -182,7 +182,7 @@ def applyBQSR(name):
         os.system(command)
     
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 ApplyBQSR \
@@ -200,7 +200,7 @@ def haplotypecaller(name):
         os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 HaplotypeCaller \
@@ -214,7 +214,7 @@ def haplotypecaller(name):
 #----------------------------------------------------------------------------------------#
 def Variantfilter(name):
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 GenotypeGVCFs \
@@ -224,7 +224,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 SelectVariants \
@@ -235,7 +235,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 SelectVariants \
@@ -246,7 +246,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 VariantFiltration \
@@ -262,7 +262,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 VariantFiltration \
@@ -276,7 +276,7 @@ def Variantfilter(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 SortVcf \
@@ -296,7 +296,7 @@ def mutect2(name):
         os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 Mutect2 \
@@ -313,7 +313,7 @@ def mutect2(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 GetPileupSummaries \
@@ -324,7 +324,7 @@ def mutect2(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 CalculateContamination \
@@ -333,7 +333,7 @@ def mutect2(name):
     os.system(command)
 
     command = f"java \
-                -Xmx32G \
+                -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
                 -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
                 FilterMutectCalls \
