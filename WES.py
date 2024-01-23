@@ -404,69 +404,6 @@ def Annotation(name):
                 -nastring . -otherinfo"
     os.system(command)
 #----------------------------------------------------------------------------------------#
-def SV(name):
-    if os.path.isdir("04.SV"):
-        pass
-    else:
-        command = "mkdir 04.SV"
-        os.system(command)
-
-    command = f"delly call \
-                -g /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
-                -o 04.SV/{Name}.sv.bcf \
-                -x /Bioinformatics/00.Tools/delly/excludeTemplates/human.hg{BATCH['Ref.ver'].split('g')[1]}.excl.tsv \
-                03.Align/{name}.bam"
-    os.system(command)
-
-    command = f"bcftools view 04.SV/{Name}.sv.bcf -Oz > 04.SV/{Name}.sv.vcf.gz"
-    os.system(command)
-
-    command = f"bcftools view \
-               -i 'FILTER=\'PASS\' & INFO/SVTYPE!=\'DEL\' & INFO/SVTYPE!=\'INS\' & INFO/SVTYPE!=\'DUP\' & INFO/SVTYPE!=\'INV\'' \
-               04.SV/{Name}.sv.vcf.gz > 04.SV/{Name}.sv.filtered.vcf"
-    os.system(command)       
-#----------------------------------------------------------------------------------------#
-def ChromosomalCNV(name):
-    if os.path.isdir("05.SV/00.ChromosomeCNV"):
-        pass
-    else:
-        command = "mkdir -p 05.SV/00.ChromosomeCNV"
-        os.system(command)
-    
-    command = f"samtools bedcov \
-                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/1MB.exclude.centromere.bed \
-                03.Align/{name}.bam > 05.SV/00.ChromosomeCNV/{name}.bedcov"
-    os.system(command)
-
-    Chromosome = [str(i) for i in range(1,23)] + ['X', 'Y']
-    Data = pd.read_csv(f"05.SV/00.ChromosomeCNV/{name}.bedcov",
-                    sep='\t',
-                    header=None,
-                    names = ['Chr', 'Start', 'End', 'Count'],
-                    low_memory=False)
-    
-    Data['Length'] = Data['End'] - Data['Start']
-    Data['count_per_length'] = Data['Count'] / Data['Length']
-    Data['TPM'] = Data['Count'] / Data['Length'] * Data['count_per_length']
-    Data['TPM'] = np.log10(Data['TPM'] + 1)
-    Median_TPM = Data['TPM'].median()
-    Data['TPM'] = Data['TPM'] - Median_TPM
-    
-    Sorted = []
-    for chromosome in Chromosome:
-        Data_sub = Data[Data['Chr'] == chromosome]
-        Sorted.append(Data_sub)
-    Sorted_Data = pd.concat(Sorted)
-    Sorted_Data['Order'] = range(1, len(Sorted_Data) + 1)
-    
-    Sorted_Data.to_csv(f"05.SV/00.ChromosomeCNV/{name}.Chromosome.CNV.txt",
-                        sep='\t',
-                        header='infer',
-                        index=False)
-    
-    command = f"Rscript /labmed/00.Code/Pipeline/WGS.ChromosomalCNV.R {name}"
-    os.system(command)
-#----------------------------------------------------------------------------------------#
 def GeneCNV(name):
     if os.path.isdir("05.SV/01.GeneCNV"):
         pass
@@ -728,16 +665,12 @@ if BATCH["Step"] == "All":
         haplotypecaller(Name)
         Variantfilter(Name)
         Annotation(Name)
-        SV(Name)
-        ChromosomalCNV(Name)
         GeneCNV(Name)
         Results(Name)
     elif BATCH['Somatic'] == 'Y':
         mutect2(Name)
         varscan2(Name)
         Annotation(Name)
-        SV(Name)
-        ChromosomalCNV(Name)
         GeneCNV(Name)
         Results(Name)
 elif BATCH["Step"] == "FastQC":
@@ -756,8 +689,4 @@ elif BATCH["Step"] == "Mutation":
     haplotypecaller(Name)
     mutect2(Name)
     varscan2(Name)
-elif BATCH["Step"] == "SV":
-    SV(Name)
-elif BATCH["Step"] == "ChromosomeCNV":
-    pass
 #----------------------------------------------------------------------------------------#
