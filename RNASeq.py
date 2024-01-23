@@ -89,7 +89,7 @@ def STAR(name):
     command = f'STAR --runThreadN {BATCH["CPU"]} --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
                 --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz --readFilesCommand zcat \
                 --outSAMtype BAM Unsorted \
-                --outFilterScoreMin {BATCH["outFilterScoreMin"]} \
+                --outFilterScoreMin {BATCH["FilterScoreMin"]} \
                 --twopassMode {BATCH["twopassMode"]} \
                 --quantMode {BATCH["quantMode"]} \
                 --outFilterMultimapNmax {BATCH["FilterMultimapNmax"]} --outFilterMismatchNmax {BATCH["FilterMismatchNmax"]} \
