@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/home/lab/anaconda3/envs/NGS/bin/python3
 #240117.ver
 
 import os
@@ -43,8 +43,8 @@ def PreQC(r1, r2):
         os.system(command)
 
     command =f'fastqc -o 00.PreQC \
-            -t {BATCH["CPU"]}\
-            {r1}\
+            -t 2 \
+            {r1} \
             {r2}'
     os.system(command)
 #----------------------------------------------------------------------------------------#
@@ -69,7 +69,7 @@ def PostQC(name):
         os.system(command)
 
     command = f'fastqc -o 01.PostQC \
-                -t {BATCH["CPU"]} \
+                -t 2 \
                 02.Trimmed/{name}_val_1.fq.gz \
                 02.Trimmed/{name}_val_2.fq.gz'
     os.system(command)
@@ -89,6 +89,7 @@ def STAR(name):
     command = f'STAR --runThreadN {BATCH["CPU"]} --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
                 --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz --readFilesCommand zcat \
                 --outSAMtype BAM Unsorted \
+                --outFilterScoreMin {BATCH["outFilterScoreMin"]} \
                 --twopassMode {BATCH["twopassMode"]} \
                 --quantMode {BATCH["quantMode"]} \
                 --outFilterMultimapNmax {BATCH["FilterMultimapNmax"]} --outFilterMismatchNmax {BATCH["FilterMismatchNmax"]} \
@@ -307,10 +308,10 @@ def QCPDF(name):
     pdf.output(f"04.QC/{name}_QC.pdf")
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == 'All':
-	# PreQC(R1, R2)
-	#Trimming(Name, R1, R2)
-	#PostQC(Name)
-	#Refindex()
+    PreQC(R1, R2)
+    Trimming(Name, R1, R2)
+    PostQC(Name)
+    Refindex()
     STAR(Name)
     QC(Name, R1, R2)
     QCPDF(Name)
