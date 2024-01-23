@@ -120,7 +120,36 @@ def STAR(name):
     DATA.to_csv(f"../Genecount/Total.Genecount.txt", sep='\t', header='infer', index=False)
 
     if BATCH["TPM"] == "Y":
-        pass
+        Length = pd.read_csv('/media/src/hg19/00.RNA/hg19.GENCODE.v44.GeneLength.txt',
+                        sep='\t',
+                        header='infer',
+                        names =['ID', 'Type', 'GeneSymbol', 'Length'])
+        LENGTH = dict(zip(Length['ID'].to_list(), Length['Length'].to_list()))
+        GENE = dict(zip(Length['ID'].to_list(), Length['GeneSymbol'].to_list()))
+        #--------------------------------------------------------------------------------#
+        GeneCount = pd.read_csv('../Genecount/Total.Genecount.txt',
+                                sep='\t',
+                                header='infer')
+        GeneCount.index = GeneCount['GeneSymbol']
+        GeneCount = GeneCount.rename_axis(None)
+        #--------------------------------------------------------------------------------#
+        GeneCount['Length'] = GeneCount['GeneSymbol'].map(LENGTH)
+        GeneCount = GeneCount.drop(columns=[GeneCount.columns[0]])
+        Count = GeneCount.iloc[:, :GeneCount.columns.get_loc('Length')]
+        Sum_Depth_Length = Count.sum(axis=0)
+        #--------------------------------------------------------------------------------#
+        Exon_length = np.array(GeneCount['Length'])
+        Sum_Depth_Length = np.array(Sum_Depth_Length)
+        result_matrix = np.outer(Exon_length, Sum_Depth_Length)
+        NormFactor = pd.DataFrame(result_matrix)
+        NormFactor.columns = list(Count.columns)
+        NormFactor.index = GeneCount.index.to_list()
+        TPM = Count.div(NormFactor)
+        #--------------------------------------------------------------------------------#
+        TPM['GeneSymbol'] = TPM.index
+        TPM['GeneSymbol'] = TPM.index.map(GENE)
+        last_column = TPM.pop('GeneSymbol')
+        TPM.insert(0, 'GeneSymbol', last_column)
     if BATCH["FPKM"] == "Y":
         pass
 #----------------------------------------------------------------------------------------#
