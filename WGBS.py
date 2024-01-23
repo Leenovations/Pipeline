@@ -2,6 +2,7 @@
 
 import os
 import pandas as pd
+import numpy as np
 import argparse
 import sys
 #-----------------------------------------------------------------------------#
@@ -113,6 +114,47 @@ if BATCH["Bismark"] == "Y":
         command = f"gunzip 03.Output/{name}.deduplicated.bismark.cov.gz"
         os.system(command)
 #----------------------------------------------------------------------------------------#
+    def ChromosomalCNV(name):
+        if os.path.isdir("04.ChromosomeCNV"):
+            pass
+        else:
+            command = "mkdir 04.ChromosomeCNV"
+            os.system(command)
+        
+        command = f"samtools bedcov \
+                    /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/1MB.exclude.centromere.bed \
+                    03.Output/{name}.deduplicated.bam > 04.ChromosomeCNV/{name}.bedcov"
+        os.system(command)
+
+        Chromosome = [str(i) for i in range(1,23)] + ['X', 'Y']
+        Data = pd.read_csv(f"04.ChromosomeCNV/{name}.bedcov",
+                        sep='\t',
+                        header=None,
+                        names = ['Chr', 'Start', 'End', 'Count'],
+                        low_memory=False)
+        
+        Data['Length'] = Data['End'] - Data['Start']
+        Data['count_per_length'] = Data['Count'] / Data['Length']
+        Data['TPM'] = Data['Count'] / Data['Length'] * Data['count_per_length']
+        Data['TPM'] = np.log2(Data['TPM'] + 1)
+        Median_TPM = Data['TPM'].median()
+        Data['TPM'] = Data['TPM'] - Median_TPM
+        
+        Sorted = []
+        for chromosome in Chromosome:
+            Data_sub = Data[Data['Chr'] == chromosome]
+            Sorted.append(Data_sub)
+        Sorted_Data = pd.concat(Sorted)
+        Sorted_Data['Order'] = range(1, len(Sorted_Data) + 1)
+        
+        Sorted_Data.to_csv(f"04.ChromosomeCNV/{name}.Chromosome.CNV.txt",
+                            sep='\t',
+                            header='infer',
+                            index=False)
+        
+        command = f"Rscript /labmed/00.Code/Pipeline/WGS.ChromosomalCNV.R {name}"
+        os.system(command)
+#----------------------------------------------------------------------------------------#
     def HTML(name):
         command = f"bismark2report --output 03.Output/{name}.html \
                     --alignment_report 03.Output/{name}_val_1_bismark_bt2_PE_report.txt \
@@ -131,6 +173,7 @@ if BATCH["Bismark"] == "Y":
         Dedup(Name)
         Lambda(Name)
         Extract(Name)
+        ChromosomalCNV(Name)
         HTML(Name)
     elif BATCH["Step"] == "FastQC":
         PreQC(R1, R2)
@@ -142,6 +185,8 @@ if BATCH["Bismark"] == "Y":
         Align(Name)
     elif BATCH["Step"] == "Dedup":
         Dedup(Name)
+    elif BATCH["Step"] == "ChromosomalCNV":
+        ChromosomalCNV(Name)
 #-----------------------------------------------------------------------------#
 elif BATCH["LAST"] == "Y":
     def LAST():
