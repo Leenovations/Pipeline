@@ -87,12 +87,14 @@ def Refindex():
 #----------------------------------------------------------------------------------------#
 def STAR(name):
     command = f'/media/src/Tools/STAR-2.7.11a/source/STAR --runThreadN {BATCH["CPU"]} --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
+                --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.GENCODE.v44.annotation.gtf \
                 --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz --readFilesCommand zcat \
-                --outSAMtype BAM Unsorted \
-                --outFilterScoreMin {BATCH["FilterScoreMin"]} \
+                --outSAMtype BAM {BATCH["outSAMtype"]} \
                 --twopassMode {BATCH["twopassMode"]} \
                 --quantMode {BATCH["quantMode"]} \
-                --outFilterMultimapNmax {BATCH["FilterMultimapNmax"]} --outFilterMismatchNmax {BATCH["FilterMismatchNmax"]} \
+                --outFilterMultimapNmax {BATCH["FilterMultimapNmax"]} \
+                --outFilterMismatchNmax {BATCH["FilterMismatchNmax"]} \
+                --outFilterScoreMin {BATCH["FilterScoreMin"]} \
                 --outFileNamePrefix 03.Output/{name}_'
     os.system(command)
 
