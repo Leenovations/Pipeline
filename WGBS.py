@@ -32,7 +32,7 @@ if BATCH["Bismark"] == "Y":
             os.system(command)
 
         command =f"fastqc -o 00.PreQC \
-                -t {BATCH['CPU']} \
+                -t 2 \
                 {r1}\
                 {r2}"
         os.system(command)
@@ -58,7 +58,7 @@ if BATCH["Bismark"] == "Y":
             os.system(command)
 
         command = f"fastqc -o 01.PostQC \
-                    -t {BATCH['CPU']} \
+                    -t 2 \
                     02.Trimmed/{name}_val_1.fq.gz \
                     02.Trimmed/{name}_val_2.fq.gz"
         os.system(command)
@@ -111,6 +111,12 @@ if BATCH["Bismark"] == "Y":
                     03.Output/{name}.deduplicated.bam"
         os.system(command)
 
+        command = f"samtools sort -@ {int(BATCH['CPU']) * 2} 03.Output/{name}.deduplicated.bam -o 03.Output/{name}.sorted.bam"
+        os.system(command)
+
+        command = f"samtools index -@ {int(BATCH['CPU']) * 2} 03.Output/{name}.sorted.bam"
+        os.system(command)
+
         command = f"gunzip 03.Output/{name}.deduplicated.bismark.cov.gz"
         os.system(command)
 #----------------------------------------------------------------------------------------#
@@ -120,10 +126,16 @@ if BATCH["Bismark"] == "Y":
         else:
             command = "mkdir 04.ChromosomeCNV"
             os.system(command)
-        
+
+        command = f"samtools sort -@ {int(BATCH['CPU']) * 2} 03.Output/{name}.deduplicated.bam -o 03.Output/{name}.sorted.bam"
+        os.system(command)
+
+        command = f"samtools index -@ {int(BATCH['CPU']) * 2} 03.Output/{name}.sorted.bam"
+        os.system(command)
+
         command = f"samtools bedcov \
                     /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/1MB.exclude.centromere.bed \
-                    03.Output/{name}.deduplicated.bam > 04.ChromosomeCNV/{name}.bedcov"
+                    03.Output/{name}.sorted.bam > 04.ChromosomeCNV/{name}.bedcov"
         os.system(command)
 
         Chromosome = [str(i) for i in range(1,23)] + ['X', 'Y']
@@ -185,7 +197,7 @@ if BATCH["Bismark"] == "Y":
         Align(Name)
     elif BATCH["Step"] == "Dedup":
         Dedup(Name)
-    elif BATCH["Step"] == "ChromosomalCNV":
+    elif BATCH["Step"] == "ChromosomeCNV":
         ChromosomalCNV(Name)
 #-----------------------------------------------------------------------------#
 elif BATCH["LAST"] == "Y":
