@@ -1,5 +1,5 @@
 #!/home/lab/anaconda3/envs/NGS/bin/python3
-#240117.ver
+#240124.ver
 
 import os
 import time
@@ -86,9 +86,11 @@ def Refindex():
         os.system(command)
 #----------------------------------------------------------------------------------------#
 def STAR(name):
-    command = f'/media/src/Tools/STAR-2.7.11a/source/STAR --runThreadN {BATCH["CPU"]} --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
+    command = f'STAR --runThreadN {BATCH["CPU"]} \
+                --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
                 --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.GENCODE.v44.annotation.gtf \
-                --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz --readFilesCommand zcat \
+                --readFilesCommand zcat \
+                --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz \
                 --outSAMtype BAM {BATCH["outSAMtype"]} \
                 --twopassMode {BATCH["twopassMode"]} \
                 --quantMode {BATCH["quantMode"]} \
@@ -98,7 +100,7 @@ def STAR(name):
                 --outFileNamePrefix 03.Output/{name}_'
     os.system(command)
 
-    Gene = pd.read_csv(f"/media/src/hg19/00.RNA/Index/geneInfo.tab", sep='\t', header=None)
+    Gene = pd.read_csv(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/geneInfo.tab', sep='\t', header=None)
     column_dict = {}
     for index, row in Gene.iterrows():
         column_dict[row[0]] = row[1]
@@ -114,44 +116,59 @@ def STAR(name):
     Dir = BATCH['Sample.Dir'].split(',')
     file_paths = [file + f"03.Output/{sample}.Genecount.txt" for file, sample in zip(Dir, names)]
 
-    data_frames = [pd.read_csv(file, 
-                            sep='\t', 
-                            header='infer')
-                            for file, sample in zip(file_paths, names)]
-    DATA = reduce(lambda left, right: pd.merge(left, right, on=['GeneSymbol']), data_frames)
-    DATA.to_csv(f"../Genecount/Total.Genecount.txt", sep='\t', header='infer', index=False)
+    while True:
+        Check = 0
+        for genecountfile in file_paths:
+            if os.path.exists(genecountfile):
+                Check += 1
+        if Check == len(file_paths):
+            break
+        else:
+            time.sleep(60)
+
+    if os.path.exists(f"../Genecount/Total.Genecount.txt"):
+        pass
+    else:
+        data_frames = [pd.read_csv(file, sep='\t', header='infer') for file, sample in zip(file_paths, names)]
+        DATA = reduce(lambda left, right: pd.merge(left, right, on=['GeneSymbol']), data_frames)
+        DATA.to_csv(f"../Genecount/Total.Genecount.txt", sep='\t', header='infer', index=False)
 
     if BATCH["TPM"] == "Y":
-        Length = pd.read_csv('/media/src/hg19/00.RNA/hg19.GENCODE.v44.GeneLength.txt',
-                        sep='\t',
-                        header='infer',
-                        names =['ID', 'Type', 'GeneSymbol', 'Length'])
-        LENGTH = dict(zip(Length['ID'].to_list(), Length['Length'].to_list()))
-        GENE = dict(zip(Length['ID'].to_list(), Length['GeneSymbol'].to_list()))
-        #--------------------------------------------------------------------------------#
-        GeneCount = pd.read_csv('../Genecount/Total.Genecount.txt',
+        if os.path.exists("../Genecount/TPM.txt"):
+            pass
+        else:
+            Length = pd.read_csv(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.GENCODE.v44.GeneLength.txt',
                                 sep='\t',
-                                header='infer')
-        GeneCount.index = GeneCount['GeneSymbol']
-        GeneCount = GeneCount.rename_axis(None)
-        #--------------------------------------------------------------------------------#
-        GeneCount['Length'] = GeneCount['GeneSymbol'].map(LENGTH)
-        GeneCount = GeneCount.drop(columns=[GeneCount.columns[0]])
-        Count = GeneCount.iloc[:, :GeneCount.columns.get_loc('Length')]
-        Sum_Depth_Length = Count.sum(axis=0)
-        #--------------------------------------------------------------------------------#
-        Exon_length = np.array(GeneCount['Length'])
-        Sum_Depth_Length = np.array(Sum_Depth_Length)
-        result_matrix = np.outer(Exon_length, Sum_Depth_Length)
-        NormFactor = pd.DataFrame(result_matrix)
-        NormFactor.columns = list(Count.columns)
-        NormFactor.index = GeneCount.index.to_list()
-        TPM = Count.div(NormFactor)
-        #--------------------------------------------------------------------------------#
-        TPM['GeneSymbol'] = TPM.index
-        TPM['GeneSymbol'] = TPM.index.map(GENE)
-        last_column = TPM.pop('GeneSymbol')
-        TPM.insert(0, 'GeneSymbol', last_column)
+                                header='infer',
+                                names =['ID', 'Type', 'GeneSymbol', 'Length'])
+            LENGTH = dict(zip(Length['ID'].to_list(), Length['Length'].to_list()))
+            GENE = dict(zip(Length['ID'].to_list(), Length['GeneSymbol'].to_list()))
+            #--------------------------------------------------------------------------------#
+            GeneCount = pd.read_csv('../Genecount/Total.Genecount.txt',
+                                    sep='\t',
+                                    header='infer')
+            GeneCount.index = GeneCount['GeneSymbol']
+            GeneCount = GeneCount.rename_axis(None)
+            #--------------------------------------------------------------------------------#
+            GeneCount['Length'] = GeneCount['GeneSymbol'].map(LENGTH)
+            GeneCount = GeneCount.drop(columns=[GeneCount.columns[0]])
+            Count = GeneCount.iloc[:, :GeneCount.columns.get_loc('Length')]
+            Depth_Length = GeneCount.iloc[:, :GeneCount.columns.get_loc('Length')].div(GeneCount['Length'], axis=0)
+            Sum_Depth_Length = Depth_Length.sum(axis=0)
+            #--------------------------------------------------------------------------------#
+            Exon_length = np.array(GeneCount['Length'])
+            Sum_Depth_Length = np.array(Sum_Depth_Length)
+            result_matrix = np.outer(Exon_length, Sum_Depth_Length)
+            NormFactor = pd.DataFrame(result_matrix)
+            NormFactor.columns = list(Count.columns)
+            NormFactor.index = Count.index.to_list()
+            TPM = Count.div(NormFactor)
+            #--------------------------------------------------------------------------------#
+            TPM['GeneSymbol'] = TPM.index
+            TPM['GeneSymbol'] = TPM.index.map(GENE)
+            last_column = TPM.pop('GeneSymbol')
+            TPM.insert(0, 'GeneSymbol', last_column)
+            TPM.to_csv('../Genecount/TPM.txt', sep='\t', index=False, header='infer')
     if BATCH["FPKM"] == "Y":
         pass
 #----------------------------------------------------------------------------------------#
