@@ -10,6 +10,7 @@ import math
 import pandas as pd
 import numpy as np
 import glob
+from RNASeq_Norm import *
 from collections import defaultdict
 from fpdf import FPDF
 from datetime import datetime
@@ -100,77 +101,14 @@ def STAR(name):
                 --outFileNamePrefix 03.Output/{name}_'
     os.system(command)
 
-    Gene = pd.read_csv(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/geneInfo.tab', sep='\t', header=None)
-    column_dict = {}
-    for index, row in Gene.iterrows():
-        column_dict[row[0]] = row[1]
-
-    Genecount = pd.read_csv(f"03.Output/{name}_ReadsPerGene.out.tab", sep='\t', header=None, names=['ID', 0, 1, 2])
-    Genecount = Genecount.drop(index=range(0, 4))
-    Genecount['ID'] = [column_dict[key] for key in Genecount['ID']]
-    Genecount = Genecount[['ID', int(BATCH["Stranded"])]]
-    Genecount.columns = ['GeneSymbol', f"{name}"]
-    Genecount.to_csv(f"03.Output/{name}.Genecount.txt", sep='\t', header='infer', index=False)
-
-    names = BATCH['Sample.Name'].split(',')
-    Dir = BATCH['Sample.Dir'].split(',')
-    file_paths = [file + f"03.Output/{sample}.Genecount.txt" for file, sample in zip(Dir, names)]
-
-    while True:
-        Check = 0
-        for genecountfile in file_paths:
-            if os.path.exists(genecountfile):
-                Check += 1
-        if Check == len(file_paths):
-            break
-        else:
-            time.sleep(60)
-
-    if os.path.exists(f"../Genecount/Total.Genecount.txt"):
-        pass
-    else:
-        data_frames = [pd.read_csv(file, sep='\t', header='infer') for file, sample in zip(file_paths, names)]
-        DATA = reduce(lambda left, right: pd.merge(left, right, on=['GeneSymbol']), data_frames)
-        DATA.to_csv(f"../Genecount/Total.Genecount.txt", sep='\t', header='infer', index=False)
+    ReadCount(name, f'{BATCH["Ref.ver"].split("g")[1]}', f'{BATCH["Stranded"]}')
 
     if BATCH["TPM"] == "Y":
-        if os.path.exists("../Genecount/TPM.txt"):
-            pass
-        else:
-            Length = pd.read_csv(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.GENCODE.v44.GeneLength.txt',
-                                sep='\t',
-                                header='infer',
-                                names =['ID', 'Type', 'GeneSymbol', 'Length'])
-            LENGTH = dict(zip(Length['ID'].to_list(), Length['Length'].to_list()))
-            GENE = dict(zip(Length['ID'].to_list(), Length['GeneSymbol'].to_list()))
-            #--------------------------------------------------------------------------------#
-            GeneCount = pd.read_csv('../Genecount/Total.Genecount.txt',
-                                    sep='\t',
-                                    header='infer')
-            GeneCount.index = GeneCount['GeneSymbol']
-            GeneCount = GeneCount.rename_axis(None)
-            #--------------------------------------------------------------------------------#
-            GeneCount['Length'] = GeneCount['GeneSymbol'].map(LENGTH)
-            GeneCount = GeneCount.drop(columns=[GeneCount.columns[0]])
-            Count = GeneCount.iloc[:, :GeneCount.columns.get_loc('Length')]
-            Depth_Length = GeneCount.iloc[:, :GeneCount.columns.get_loc('Length')].div(GeneCount['Length'], axis=0)
-            Sum_Depth_Length = Depth_Length.sum(axis=0)
-            #--------------------------------------------------------------------------------#
-            Exon_length = np.array(GeneCount['Length'])
-            Sum_Depth_Length = np.array(Sum_Depth_Length)
-            result_matrix = np.outer(Exon_length, Sum_Depth_Length)
-            NormFactor = pd.DataFrame(result_matrix)
-            NormFactor.columns = list(Count.columns)
-            NormFactor.index = Count.index.to_list()
-            TPM = Count.div(NormFactor)
-            #--------------------------------------------------------------------------------#
-            TPM['GeneSymbol'] = TPM.index
-            TPM['GeneSymbol'] = TPM.index.map(GENE)
-            last_column = TPM.pop('GeneSymbol')
-            TPM.insert(0, 'GeneSymbol', last_column)
-            TPM.to_csv('../Genecount/TPM.txt', sep='\t', index=False, header='infer')
+        TPM(name)
     if BATCH["FPKM"] == "Y":
-        pass
+        FPKM(name)
+
+    Merge(name,  BATCH['Sample.Name'].split(','), BATCH['Sample.Dir'].split(','), BATCH["TPM"], BATCH["FPKM"])
 #----------------------------------------------------------------------------------------#
 def QC(name, r1, r2):
     if os.path.isdir('04.QC/'):

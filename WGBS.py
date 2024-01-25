@@ -127,12 +127,6 @@ if BATCH["Bismark"] == "Y":
             command = "mkdir 04.ChromosomeCNV"
             os.system(command)
 
-        command = f"samtools sort -@ {int(BATCH['CPU']) * 2} 03.Output/{name}.deduplicated.bam -o 03.Output/{name}.sorted.bam"
-        os.system(command)
-
-        command = f"samtools index -@ {int(BATCH['CPU']) * 2} 03.Output/{name}.sorted.bam"
-        os.system(command)
-
         command = f"samtools bedcov \
                     /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/1MB.exclude.centromere.bed \
                     03.Output/{name}.sorted.bam > 04.ChromosomeCNV/{name}.bedcov"
@@ -147,10 +141,9 @@ if BATCH["Bismark"] == "Y":
         
         Data['Length'] = Data['End'] - Data['Start']
         Data['count_per_length'] = Data['Count'] / Data['Length']
-        Data['TPM'] = Data['Count'] / Data['Length'] * Data['count_per_length']
-        Data['TPM'] = np.log2(Data['TPM'] + 1)
-        Median_TPM = Data['TPM'].median()
-        Data['TPM'] = Data['TPM'] - Median_TPM
+        Data['Norm'] = Data['Count'] / (Data['Length'] * Data['count_per_length'].sum())
+        Median_Norm = Data['Norm'].median()
+        Data['Norm'] = Data['Norm'] - Median_Norm
         
         Sorted = []
         for chromosome in Chromosome:

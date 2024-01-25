@@ -438,10 +438,10 @@ def ChromosomalCNV(name):
     
     Data['Length'] = Data['End'] - Data['Start']
     Data['count_per_length'] = Data['Count'] / Data['Length']
-    Data['TPM'] = Data['Count'] / Data['Length'] * Data['count_per_length']
-    Data['TPM'] = np.log10(Data['TPM'] + 1)
-    Median_TPM = Data['TPM'].median()
-    Data['TPM'] = Data['TPM'] - Median_TPM
+    Data['Norm'] = Data['Count'] / (Data['Length'] * Data['count_per_length'].sum())
+    Data['Norm'] = np.log2(Data['Norm'] + 1)
+    Median_Norm = Data['Norm'].median()
+    Data['Norm'] = Data['Norm'] - Median_Norm
     
     Sorted = []
     for chromosome in Chromosome:
