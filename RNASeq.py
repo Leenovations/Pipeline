@@ -100,7 +100,8 @@ def STAR(name):
                 --outFilterScoreMin {BATCH["FilterScoreMin"]} \
                 --outFileNamePrefix 03.Output/{name}_'
     os.system(command)
-
+#----------------------------------------------------------------------------------------#
+def Expression(name):
     ReadCount(name, f'{BATCH["Ref.ver"].split("g")[1]}', f'{BATCH["Stranded"]}')
 
     if BATCH["TPM"] == "Y":
@@ -294,13 +295,14 @@ def QCPDF(name):
     pdf.output(f"04.QC/{name}_QC.pdf")
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == 'All':
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    Refindex()
-    STAR(Name)
-    QC(Name, R1, R2)
-    QCPDF(Name)
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # Refindex()
+    # STAR(Name)
+    Expression(Name)
+    # QC(Name, R1, R2)
+    # QCPDF(Name)
     # Fusion(Name)
 elif BATCH["Step"] == 'FastQC':
     PreQC(R1, R2)
@@ -310,6 +312,7 @@ elif BATCH["Step"] == 'Align':
     Trimming(Name, R1, R2)
     Refindex()
     STAR(Name)
+    Expression(Name)
 elif BATCH["Step"] == 'Fusion':
     Trimming(Name, R1, R2)
     STAR(Name)

@@ -65,7 +65,7 @@ def FPKM(sample):
                      index=False,
                      header='infer')
 #--------------------------------------------------------------------------------#
-def Merge(sample, samples, Dirs, TPM , FPKM):
+def Merge(sample, samples, Dirs, TPM, FPKM):
     Samples = samples
     Dir = Dirs
     Genecount_paths = [file + f"03.Output/{sample}.Genecount.txt" for file, sample in zip(Dir, Samples)]
@@ -80,21 +80,27 @@ def Merge(sample, samples, Dirs, TPM , FPKM):
         if Check == len(Genecount_paths):
             break
         else:
-            time.sleep(600)
+            time.sleep(10)
     
     if sample == Samples[0]:
         data_frames = [pd.read_csv(file, sep='\t', header='infer') for file, sample in zip(Genecount_paths, Samples)]
         DATA = reduce(lambda left, right: pd.merge(left, right, on=['ID', 'GeneSymbol']), data_frames)
         DATA.to_csv(f"../Genecount/Total.Genecount.txt", sep='\t', header='infer', index=False)
+        with pd.ExcelWriter('../Genecount/Expression.xlsx', engine='openpyxl', mode='w') as writer:
+            DATA.to_excel(writer, sheet_name='ReadCount', index=False)
         
         if TPM == 'Y':
             data_frames = [pd.read_csv(file, sep='\t', header='infer') for file, sample in zip(TPM_paths, Samples)]
             DATA = reduce(lambda left, right: pd.merge(left, right, on=['ID', 'GeneSymbol']), data_frames)
             DATA.to_csv(f"../Genecount/Total.TPM.txt", sep='\t', header='infer', index=False)
+            with pd.ExcelWriter('../Genecount/Expression.xlsx', engine='openpyxl', mode='a') as writer:
+                DATA.to_excel(writer, sheet_name='TPM', index=False)
 
         if FPKM == 'Y':
             data_frames = [pd.read_csv(file, sep='\t', header='infer') for file, sample in zip(FPKM_paths, Samples)]
             DATA = reduce(lambda left, right: pd.merge(left, right, on=['ID', 'GeneSymbol']), data_frames)
             DATA.to_csv(f"../Genecount/Total.FPKM.txt", sep='\t', header='infer', index=False)
+            with pd.ExcelWriter('../Genecount/Expression.xlsx', engine='openpyxl', mode='a') as writer:
+                DATA.to_excel(writer, sheet_name='FPKM', index=False)
     else:
         pass
