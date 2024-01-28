@@ -165,7 +165,7 @@ def baserecalibrator(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 BaseRecalibrator \
                 -I 03.Align/{name}.MarkDuplicate.bam \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -186,7 +186,7 @@ def applyBQSR(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 ApplyBQSR \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
                 -L /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/whole.exome.exon.bed \
@@ -205,7 +205,7 @@ def haplotypecaller(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 HaplotypeCaller \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
                 -L /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/whole.exome.exon.bed \
@@ -220,7 +220,7 @@ def Variantfilter(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 GenotypeGVCFs \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
                 -L /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/whole.exome.exon.bed \
@@ -231,7 +231,7 @@ def Variantfilter(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 SelectVariants \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
                 -L /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/whole.exome.exon.bed \
@@ -243,7 +243,7 @@ def Variantfilter(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 SelectVariants \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
                 -L /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/whole.exome.exon.bed \
@@ -255,7 +255,7 @@ def Variantfilter(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 VariantFiltration \
                 -L /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/whole.exome.exon.bed \
                 -V 03.Align/{name}.SNPs.vcf \
@@ -272,7 +272,7 @@ def Variantfilter(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 VariantFiltration \
                 -L /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/08.bed/whole.exome.exon.bed \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
@@ -287,7 +287,7 @@ def Variantfilter(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 SortVcf \
                 -I 03.Align/{name}.SNPs.flt.vcf \
                 -I 03.Align/{name}.INDELs.flt.vcf \
@@ -307,7 +307,7 @@ def mutect2(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 Mutect2 \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
                 -I 03.Align/{name}.bam \
@@ -324,7 +324,7 @@ def mutect2(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 GetPileupSummaries \
                 -I 03.Align/{name}.bam \
                 -V /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/03.db/small_exac_common_3.vcf \
@@ -335,7 +335,7 @@ def mutect2(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 CalculateContamination \
                 -I 03.Align/{name}.getpileupsummaries.table \
                 -O 03.Align/{name}.contamination.table"
@@ -344,7 +344,7 @@ def mutect2(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /media/src/Tools/gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 FilterMutectCalls \
                 -R /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
                 -V 03.Align/{name}.mutect2.vcf \
@@ -650,28 +650,28 @@ def Results(name):
     writer.save()
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == "All":
-    # PreQC(R1, R2)
-    # Trimming(Name, R1, R2)
-    # PostQC(Name)
-    # bwaindex()
-    # bwa(Name)
-    # Bamflt(Name)
-    # AddOrReplaceReadGroups(Name)
-    # markduplicate(Name)
-    # makedict()
-    # baserecalibrator(Name)
-    # applyBQSR(Name)
+    PreQC(R1, R2)
+    Trimming(Name, R1, R2)
+    PostQC(Name)
+    bwaindex()
+    bwa(Name)
+    Bamflt(Name)
+    AddOrReplaceReadGroups(Name)
+    markduplicate(Name)
+    makedict()
+    baserecalibrator(Name)
+    applyBQSR(Name)
     if BATCH['Germline'] == 'Y':
         haplotypecaller(Name)
         Variantfilter(Name)
         Annotation(Name)
-        GeneCNV(Name)
+        # GeneCNV(Name)
         Results(Name)
     elif BATCH['Somatic'] == 'Y':
         mutect2(Name)
         varscan2(Name)
         Annotation(Name)
-        GeneCNV(Name)
+        # GeneCNV(Name)
         Results(Name)
 elif BATCH["Step"] == "FastQC":
     PreQC(R1, R2)
