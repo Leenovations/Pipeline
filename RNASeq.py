@@ -1,5 +1,5 @@
 #!/home/lab/anaconda3/envs/NGS/bin/python3
-#240124.ver
+#240203.ver
 
 import os
 import time
