@@ -396,25 +396,25 @@ def Annotation(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def SV(name):
-    if os.path.isdir("04.SV"):
+    if os.path.isdir("05.SV/02.SV"):
         pass
     else:
-        command = "mkdir 04.SV"
+        command = "mkdir 05.SV/02.SV"
         os.system(command)
 
     command = f"delly call \
                 -g /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/02.Fasta/Homo_sapiens_assembly{BATCH['Ref.ver'].split('g')[1]}.fasta \
-                -o 04.SV/{Name}.sv.bcf \
+                -o 05.SV/02.SV/{Name}.sv.bcf \
                 -x /Bioinformatics/00.Tools/delly/excludeTemplates/human.hg{BATCH['Ref.ver'].split('g')[1]}.excl.tsv \
                 03.Align/{name}.bam"
     os.system(command)
 
-    command = f"bcftools view 04.SV/{Name}.sv.bcf -Oz > 04.SV/{Name}.sv.vcf.gz"
+    command = f"bcftools view 05.SV/02.SV/{Name}.sv.bcf -Oz > 05.SV/02.SV/{Name}.sv.vcf.gz"
     os.system(command)
 
     command = f"bcftools view \
                -i 'FILTER=\'PASS\' & INFO/SVTYPE!=\'DEL\' & INFO/SVTYPE!=\'INS\' & INFO/SVTYPE!=\'DUP\' & INFO/SVTYPE!=\'INV\'' \
-               04.SV/{Name}.sv.vcf.gz > 04.SV/{Name}.sv.filtered.vcf"
+               05.SV/02.SV/{Name}.sv.vcf.gz > 05.SV/02.SV/{Name}.sv.filtered.vcf"
     os.system(command)       
 #----------------------------------------------------------------------------------------#
 def ChromosomalCNV(name):
@@ -704,16 +704,16 @@ def Results(name):
     writer.save()
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == "All":
-    # PreQC(R1, R2)
-    # Trimming(Name, R1, R2)
-    # PostQC(Name)
-    # bwaindex()
-    # bwa(Name)
-    # Bamflt(Name)
-    # AddOrReplaceReadGroups(Name)
-    # markduplicate(Name)
-    # makedict()
-    # baserecalibrator(Name)
+    PreQC(R1, R2)
+    Trimming(Name, R1, R2)
+    PostQC(Name)
+    bwaindex()
+    bwa(Name)
+    Bamflt(Name)
+    AddOrReplaceReadGroups(Name)
+    markduplicate(Name)
+    makedict()
+    baserecalibrator(Name)
     applyBQSR(Name)
     if BATCH['Germline'] == 'Y':
         haplotypecaller(Name)
