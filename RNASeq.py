@@ -4,18 +4,11 @@
 import os
 import time
 import argparse
-import sys
-import smtplib
-import math
 import pandas as pd
 import numpy as np
-import glob
 from RNASeqNorm import *
 from RNASeqQC import *
-from collections import defaultdict
-from fpdf import FPDF
 from datetime import datetime
-from functools import reduce
 #----------------------------------------------------------------------------------------#
 Start_time = time.time()
 dt = datetime.now()
