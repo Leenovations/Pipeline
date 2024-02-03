@@ -162,7 +162,7 @@ def QCPDF(name):
     pdf.set_fill_color(r = 150, g = 150, b = 150)
     pdf.cell(57,10, txt = list(Info.keys())[0], align = 'C', border=1, ln=0, fill = True)
     pdf.cell(57,10, txt = list(Info.keys())[1].replace(',',''), align = 'C', border=1, ln=0, fill = True)
-    pdf.cell(57,10, txt = list(Info.keys())[-1], align = 'C', border=1, ln=0, fill = True)
+    pdf.cell(57,10, txt = "Chimeric reads %", align = 'C', border=1, ln=0, fill = True)
     pdf.set_xy(20, 240)
     pdf.cell(57,10, txt = Info[list(Info.keys())[0]], align = 'C', border=1)
     pdf.cell(57,10, txt = Info[list(Info.keys())[1]], align = 'C', border=1)
