@@ -184,6 +184,6 @@ def QCPDF(name):
 def pdfconverter(name):
     images = convert_from_path(f"04.QC/{name}.QC.pdf")
 
-    for i, image in enumerate(images):
-        image.save(f"04.QC/{name}.QC.jpg", "JPEG")
+    for page, image in enumerate(images):
+        image.save(f"04.QC/{name}.QC.{page}.jpg", "JPEG")
 #----------------------------------------------------------------------------------------#
