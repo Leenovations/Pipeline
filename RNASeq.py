@@ -111,7 +111,7 @@ def Expression(name):
 
     Merge(name,  BATCH['Sample.Name'].split(','), BATCH['Sample.Dir'].split(','), BATCH["TPM"], BATCH["FPKM"])
 #----------------------------------------------------------------------------------------#
-def QC(name, r1, r2):
+def QC(name):
     if os.path.isdir('04.QC/'):
         pass
     else:
@@ -151,7 +151,7 @@ if BATCH["Step"] == 'All':
     Refindex()
     STAR(Name)
     Expression(Name)
-    QC(Name, R1, R2)
+    QC(Name)
     QCPDF(Name)
 elif BATCH["Step"] == 'FastQC':
     PreQC(R1, R2)
@@ -164,6 +164,8 @@ elif BATCH["Step"] == 'Align':
     STAR(Name)
 elif BATCH["Step"] == 'Expression':
     Expression(Name)
+elif BATCH["Step"] == 'QC':
+    QC(Name)
 elif BATCH["Step"] == 'Fusion':
     Trimming(Name, R1, R2)
     STAR(Name)

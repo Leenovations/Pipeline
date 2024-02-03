@@ -42,7 +42,7 @@ def QCPDF(name):
 # set style and size of font 
     pdf.set_font("Arial", size = 15)
 
-# set center location 
+# set center location of x (210 : A4)
     Center_x = pdf.w / 2 # 105
         
 # create a cell
@@ -182,5 +182,5 @@ def pdfconverter(name):
     for i, image in enumerate(images):
         image.save(f"04.QC/{Name}.QC.jpg", "JPEG")
 #----------------------------------------------------------------------------------------#
-QCPDF(Name)
-pdfconverter(Name)
+# QCPDF(Name)
+# pdfconverter(Name)
