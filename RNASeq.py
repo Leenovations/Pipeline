@@ -10,7 +10,7 @@ import math
 import pandas as pd
 import numpy as np
 import glob
-from RNASeq_Norm import *
+from RNASeqNorm import *
 from collections import defaultdict
 from fpdf import FPDF
 from datetime import datetime
