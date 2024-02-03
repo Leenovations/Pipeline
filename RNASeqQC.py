@@ -1,7 +1,10 @@
+#!/home/lab/anaconda3/envs/NGS/bin/python3
+
 import os
 import pandas as pd
 from fpdf import FPDF
 from datetime import datetime
+from pdf2image import convert_from_path
 #----------------------------------------------------------------------------------------#
 Sample = pd.read_csv('SampleSheet.txt', sep='\t', header=None)
 Name = Sample.iloc[0,0]
@@ -25,6 +28,12 @@ def QCPDF(name):
                     -d 01.PostQC/'
         os.system(command)
 
+    if os.path.isdir('04.QC/'):
+        pass
+    else:
+        command = 'mkdir 04.QC'
+        os.system(command)
+
     pdf = FPDF()
         
 # Adding a page
@@ -32,26 +41,29 @@ def QCPDF(name):
         
 # set style and size of font 
     pdf.set_font("Arial", size = 15)
+
+# set center location 
+    Center_x = pdf.w / 2 # 105
         
 # create a cell
-    pdf.set_fill_color(r= 100, g= 100, b= 100 )
-    pdf.line(10,20,200,20)
+    pdf.set_fill_color(r=100, g=100, b=100)
+    pdf.line(Center_x-95, 20, Center_x+95, 20)
     pdf.text(20, 11, txt = 'Imatinib Resistance')
 
 #Sample Name
-    pdf.set_font("helvetica", style = 'B', size = 10)
+    pdf.set_font("Arial", style = 'B', size = 10)
     pdf.text(20, 17, txt = f"Sample : {name}")
 
 #Date
-    pdf.set_font("helvetica", style = 'B', size = 10)
-    pdf.text(170, 17, txt = Date.strftime('%Y-%m-%d'))
+    pdf.set_font("Arial", style = 'B', size = 10)
+    pdf.text(190, 17, txt = Date.strftime('%Y-%m-%d'))
 
 #Category 1
-    pdf.set_font("helvetica", style = 'B', size = 12)
+    pdf.set_font("Arial", style = 'B', size = 12)
     pdf.text(20, 27, txt = '1. FASTQ Statistics - PreQC')
 
 #Category1 Image
-    pdf.set_font("helvetica", size = 9)
+    pdf.set_font("Arial", size = 9)
 
     pdf.text(26, 35, txt = "Per base quality : Untrimmed")
     pdf.image(f'00.PreQC/{name}_R1_001_fastqc/Images/per_base_quality.png', x = 20, y = 36, w = 50, h = 50, type = 'PNG')
@@ -63,11 +75,11 @@ def QCPDF(name):
     pdf.image(f'00.PreQC/{name}_R1_001_fastqc/Images/per_base_sequence_content.png', x = 140, y = 36, w = 50, h = 50, type = 'PNG')
 
 #Category 2
-    pdf.set_font("helvetica",style = 'B', size = 12)
+    pdf.set_font("Arial",style = 'B', size = 12)
     pdf.text(20, 100, txt = '2. FASTQ Statistics - PostQC')
 
 #Category2 Image
-    pdf.set_font("helvetica", size = 9)
+    pdf.set_font("Arial", size = 9)
 
     pdf.text(26, 108, txt = "Per base quality : Trimmed")
     pdf.image(f'01.PostQC/{name}_val_1_fastqc/Images/per_base_quality.png', x = 20, y = 110, w = 50, h = 50, type = 'PNG')
@@ -79,7 +91,7 @@ def QCPDF(name):
     pdf.image(f'01.PostQC/{name}_val_1_fastqc/Images/per_base_sequence_content.png', x = 140, y = 110, w = 50, h = 50, type = 'PNG')
 
 #Category 3 
-    pdf.set_font("helvetica",style = 'B', size = 12)
+    pdf.set_font("Arial",style = 'B', size = 12)
     pdf.text(20, 170, txt = '3. Sequencing Statistics')
 
     Info = {}
@@ -110,7 +122,7 @@ def QCPDF(name):
     Percent = str(round(int(Mapped_read)/int(Total_read)*100))
     Ontarget = str(round(int(Target_Mapped_read)/int(Mapped_read)*100))
 
-    pdf.set_font("helvetica", size = 11)
+    pdf.set_font("Arial", size = 11)
     pdf.set_xy(20, 175)
     pdf.set_fill_color(r = 150, g = 150, b = 150)
     pdf.cell(57,10, txt = 'Total base', align = 'C', border=1, ln=0, fill = True)
@@ -138,7 +150,7 @@ def QCPDF(name):
     pdf.cell(171,10, txt = Ontarget + ' %', align = 'C', border=1)
 
 #Category 4 
-    pdf.set_font("helvetica", style = 'B', size = 12)
+    pdf.set_font("Arial", style = 'B', size = 12)
     pdf.text(20, 250, txt = '4. STAR Alignment Statistics')
 
     Info = {}
@@ -150,7 +162,7 @@ def QCPDF(name):
                 splitted = line.split('|')
                 Info[splitted[0]] = splitted[1]
 
-    pdf.set_font("helvetica", size = 11)
+    pdf.set_font("Arial", size = 11)
     pdf.set_xy(20, 255)
     pdf.set_fill_color(r = 150, g = 150, b = 150)
     pdf.cell(57,10, txt = list(Info.keys())[0], align = 'C', border=1, ln=0, fill = True)
@@ -162,6 +174,13 @@ def QCPDF(name):
     pdf.cell(57,10, txt = Info[list(Info.keys())[-1]], align = 'C', border=1)
 
 # save the pdf
-    pdf.output(f"04.QC/{name}_QC.pdf")
+    pdf.output(f"04.QC/{name}.QC.pdf")
+#----------------------------------------------------------------------------------------#
+def pdfconverter(name):
+    images = convert_from_path(f"04.QC/{Name}.QC.pdf")
+
+    for i, image in enumerate(images):
+        image.save(f"04.QC/{Name}.QC.jpg", "JPEG")
 #----------------------------------------------------------------------------------------#
 QCPDF(Name)
+pdfconverter(Name)
