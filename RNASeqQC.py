@@ -6,11 +6,6 @@ from fpdf import FPDF
 from datetime import datetime
 from pdf2image import convert_from_path
 #----------------------------------------------------------------------------------------#
-Sample = pd.read_csv('SampleSheet.txt', sep='\t', header=None)
-Name = Sample.iloc[0,0]
-R1 = Sample.iloc[0,1]
-R2 = Sample.iloc[0,2]
-#----------------------------------------------------------------------------------------#
 def QCPDF(name):
     Date = datetime.now()
 
@@ -48,7 +43,7 @@ def QCPDF(name):
 # create a cell
     pdf.set_fill_color(r=100, g=100, b=100)
     pdf.line(Center_x-95, 20, Center_x+95, 20)
-    pdf.text(20, 11, txt = 'Imatinib Resistance')
+    pdf.text(20, 11, txt = 'RNA-Seq QC')
 
 #Sample Name
     pdf.set_font("Arial", style = 'B', size = 10)
@@ -56,7 +51,7 @@ def QCPDF(name):
 
 #Date
     pdf.set_font("Arial", style = 'B', size = 10)
-    pdf.text(190, 17, txt = Date.strftime('%Y-%m-%d'))
+    pdf.text(170, 17, txt = Date.strftime('%Y-%m-%d'))
 
 #Category 1
     pdf.set_font("Arial", style = 'B', size = 12)
@@ -143,15 +138,15 @@ def QCPDF(name):
     pdf.cell(57,10, txt = Average_insert, align = 'C', border=1)
     pdf.cell(57,10, txt = Average_qual, align = 'C', border=1)
 
-    pdf.set_xy(20, 215)
-    pdf.set_fill_color(r = 150, g = 150, b = 150)
-    pdf.cell(171,10, txt = 'Ontarget %', align = 'C', border=1, fill = True)
-    pdf.set_xy(20, 225)
-    pdf.cell(171,10, txt = Ontarget + ' %', align = 'C', border=1)
+    # pdf.set_xy(20, 215)
+    # pdf.set_fill_color(r = 150, g = 150, b = 150)
+    # pdf.cell(171,10, txt = 'Ontarget %', align = 'C', border=1, fill = True)
+    # pdf.set_xy(20, 225)
+    # pdf.cell(171,10, txt = Ontarget + ' %', align = 'C', border=1)
 
 #Category 4 
     pdf.set_font("Arial", style = 'B', size = 12)
-    pdf.text(20, 250, txt = '4. STAR Alignment Statistics')
+    pdf.text(20, 225, txt = '4. STAR Alignment Statistics')
 
     Info = {}
     with open(f'04.QC/{name}_Log.final.out', 'r') as handle:
@@ -163,24 +158,32 @@ def QCPDF(name):
                 Info[splitted[0]] = splitted[1]
 
     pdf.set_font("Arial", size = 11)
-    pdf.set_xy(20, 255)
+    pdf.set_xy(20, 230)
     pdf.set_fill_color(r = 150, g = 150, b = 150)
     pdf.cell(57,10, txt = list(Info.keys())[0], align = 'C', border=1, ln=0, fill = True)
     pdf.cell(57,10, txt = list(Info.keys())[1].replace(',',''), align = 'C', border=1, ln=0, fill = True)
     pdf.cell(57,10, txt = list(Info.keys())[-1], align = 'C', border=1, ln=0, fill = True)
-    pdf.set_xy(20, 265)
+    pdf.set_xy(20, 240)
     pdf.cell(57,10, txt = Info[list(Info.keys())[0]], align = 'C', border=1)
     pdf.cell(57,10, txt = Info[list(Info.keys())[1]], align = 'C', border=1)
     pdf.cell(57,10, txt = Info[list(Info.keys())[-1]], align = 'C', border=1)
+
+    pdf.set_xy(20, 250)
+    pdf.set_fill_color(r = 150, g = 150, b = 150)
+    pdf.cell(57,10, txt = "Multiple loci mapped reads %", align = 'C', border=1, ln=0, fill = True)
+    pdf.cell(57,10, txt = "Too many loci mapped reads %", align = 'C', border=1, ln=0, fill = True)
+    pdf.cell(57,10, txt = "Too short unmapped reads %", align = 'C', border=1, ln=0, fill = True)
+    pdf.set_xy(20, 260)
+    pdf.cell(57,10, txt = Info[list(Info.keys())[4]], align = 'C', border=1)
+    pdf.cell(57,10, txt = Info[list(Info.keys())[5]], align = 'C', border=1)
+    pdf.cell(57,10, txt = Info[list(Info.keys())[6]], align = 'C', border=1)
 
 # save the pdf
     pdf.output(f"04.QC/{name}.QC.pdf")
 #----------------------------------------------------------------------------------------#
 def pdfconverter(name):
-    images = convert_from_path(f"04.QC/{Name}.QC.pdf")
+    images = convert_from_path(f"04.QC/{name}.QC.pdf")
 
     for i, image in enumerate(images):
-        image.save(f"04.QC/{Name}.QC.jpg", "JPEG")
+        image.save(f"04.QC/{name}.QC.jpg", "JPEG")
 #----------------------------------------------------------------------------------------#
-# QCPDF(Name)
-# pdfconverter(Name)

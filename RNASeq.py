@@ -140,7 +140,7 @@ def QC(name):
     command = f'samtools depth 03.Output/{name}_Sorted.out.bam > 04.QC/{name}.Total.Depth.txt'
     os.system(command)
 #----------------------------------------------------------------------------------------#
-def QCPDF(name):
+def Results(name):
     QCPDF(name)
     pdfconverter(name)
 #----------------------------------------------------------------------------------------#
@@ -152,7 +152,7 @@ if BATCH["Step"] == 'All':
     STAR(Name)
     Expression(Name)
     QC(Name)
-    QCPDF(Name)
+    Results(Name)
 elif BATCH["Step"] == 'FastQC':
     PreQC(R1, R2)
     Trimming(Name, R1, R2)
@@ -169,5 +169,7 @@ elif BATCH["Step"] == 'QC':
 elif BATCH["Step"] == 'Fusion':
     Trimming(Name, R1, R2)
     STAR(Name)
+elif BATCH["Step"] == 'Results':
+    Results(Name)
 elif BATCH["Step"] == 'Indexing':
     Refindex()
