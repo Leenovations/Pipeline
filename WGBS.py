@@ -75,49 +75,62 @@ if BATCH["Bismark"] == "Y":
             os.system(command)
 #----------------------------------------------------------------------------------------#
     def Align(name):
-        if os.path.isdir(f"03.Output/"):
+        if os.path.isdir(f"03.Align/"):
             pass
         else:
-            command = f"mkdir -p 03.Output/"
+            command = f"mkdir -p 03.Align/"
             os.system(command)
 
         command = f"bismark \
                     --multicore {BATCH['CPU']} --un --ambiguous --gzip --nucleotide_coverage \
                     --temp_dir TEMP \
-                    -o 03.Output/ \
+                    -o 03.Align/ \
                     --genome /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation/ \
                     -1 02.Trimmed/{name}_val_1.fq.gz -2 02.Trimmed/{name}_val_2.fq.gz"
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def Dedup(name):
         command = f"deduplicate_bismark -p \
-                    --output_dir 03.Output/ \
-                    -o 03.Output/{name} \
-                    03.Output/{name}_val_1_bismark_bt2_pe.bam"
+                    --output_dir 03.Align/ \
+                    -o 03.Align/{name} \
+                    03.Align/{name}_val_1_bismark_bt2_pe.bam"
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def Lambda(name):
-        command = f"bismark --gzip -o 03.Output --genome /Bioinformatics/01.Reference/lambda \
-                    -1 03.Output/{name}_val_1.fq.gz_unmapped_reads_1.fq.gz \
-                    -2 03.Output/{name}_val_2.fq.gz_unmapped_reads_2.fq.gz"
+        command = f"bismark --gzip -o 03.Align --genome /Bioinformatics/01.Reference/lambda \
+                    -1 03.Align/{name}_val_1.fq.gz_unmapped_reads_1.fq.gz \
+                    -2 03.Align/{name}_val_2.fq.gz_unmapped_reads_2.fq.gz"
+        os.system(command)
+#----------------------------------------------------------------------------------------#
+    def bamflt(name):
+        if os.path.isdir(f"03.Align/"):
+            pass
+        else:
+            command = f"mkdir -p 03.Align/"
+            os.system(command)
+
+        command = f"samtools view -f 2 -bq {BATCH['bq']} {name}.deduplicated.bam -o 03.Align/{name}.flt.bam"
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def Extract(name):
+        if os.path.isdir(f"03.Align/"):
+            pass
+        else:
+            command = f"mkdir -p 03.Align/"
+            os.system(command)
+    
         command = f"bismark_methylation_extractor \
                     -p --no_overlap --bedGraph --gzip --multicore 20 --cytosine_report \
                     --genome_folder /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation \
                     --comprehensive --merge_non_CpG \
-                    -o 03.Output \
-                    03.Output/{name}.deduplicated.bam"
+                    -o 03.Align \
+                    03.Align/{name}.flt.bam"
         os.system(command)
 
-        command = f"samtools sort -@ {int(BATCH['CPU']) * 2} 03.Output/{name}.deduplicated.bam -o 03.Output/{name}.sorted.bam"
+        command = f"samtools sort -@ {int(BATCH['CPU']) * 2} 03.Align/{name}.flt.bam -o 03.Align/{name}.sorted.bam"
         os.system(command)
 
-        command = f"samtools index -@ {int(BATCH['CPU']) * 2} 03.Output/{name}.sorted.bam"
-        os.system(command)
-
-        command = f"gunzip 03.Output/{name}.deduplicated.bismark.cov.gz"
+        command = f"samtools index -@ {int(BATCH['CPU']) * 2} 03.Align/{name}.sorted.bam"
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def ChromosomalCNV(name):
@@ -129,7 +142,7 @@ if BATCH["Bismark"] == "Y":
 
         command = f"samtools bedcov \
                     /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/1MB.exclude.centromere.bed \
-                    03.Output/{name}.sorted.bam > 04.ChromosomeCNV/{name}.bedcov"
+                    03.Align/{name}.sorted.bam > 04.ChromosomeCNV/{name}.bedcov"
         os.system(command)
 
         Chromosome = [str(i) for i in range(1,23)] + ['X', 'Y']
@@ -161,35 +174,42 @@ if BATCH["Bismark"] == "Y":
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def HTML(name):
-        command = f"bismark2report --output 03.Output/{name}.html \
-                    --alignment_report 03.Output/{name}_val_1_bismark_bt2_PE_report.txt \
-                    --dedup_report 03.Output/{name}_val_1_bismark_bt2_pe.deduplication_report.txt \
-                    --splitting_report 03.Output/{name}.deduplicated_splitting_report.txt \
-                    --mbias_report 03.Output/{name}.deduplicated.M-bias.txt \
-                    --nucleotide_report 03.Output/{name}_val_1_bismark_bt2_pe.nucleotide_stats.txt"
+        command = f"bismark2report --output 03.Align/{name}.html \
+                    --alignment_report 03.Align/{name}_val_1_bismark_bt2_PE_report.txt \
+                    --dedup_report 03.Align/{name}_val_1_bismark_bt2_pe.deduplication_report.txt \
+                    --splitting_report 03.Align/{name}.deduplicated_splitting_report.txt \
+                    --mbias_report 03.Align/{name}.deduplicated.M-bias.txt \
+                    --nucleotide_report 03.Align/{name}_val_1_bismark_bt2_pe.nucleotide_stats.txt"
         os.system(command)
 #----------------------------------------------------------------------------------------#
     if BATCH["Step"] == "All":
-        PreQC(R1, R2)
-        Trimming(Name, R1, R2)
-        PostQC(Name)
-        Index()
-        Align(Name)
-        Dedup(Name)
-        Lambda(Name)
+        # PreQC(R1, R2)
+        # Trimming(Name, R1, R2)
+        # PostQC(Name)
+        # Index()
+        # Align(Name)
+        # Dedup(Name)
+        # Lambda(Name)
+        bamflt(Name)
         Extract(Name)
-        ChromosomalCNV(Name)
-        HTML(Name)
+        # ChromosomalCNV(Name)
+        # HTML(Name)
     elif BATCH["Step"] == "FastQC":
         PreQC(R1, R2)
         Trimming(Name, R1, R2)
         PostQC(Name)
+    elif BATCH["Step"] == "Trimming":
+        Trimming(Name, R1, R2)
     elif BATCH["Step"] == "Align":
         Trimming(Name, R1, R2)
         Index()
         Align(Name)
     elif BATCH["Step"] == "Dedup":
         Dedup(Name)
+    elif BATCH["Step"] == "Bamflt":
+        bamflt(Name)
+    elif BATCH["Step"] == "Extract":
+        Extract(Name)
     elif BATCH["Step"] == "ChromosomeCNV":
         ChromosomalCNV(Name)
 #-----------------------------------------------------------------------------#
