@@ -155,6 +155,7 @@ if BATCH["Bismark"] == "Y":
         Data['Length'] = Data['End'] - Data['Start']
         Data['count_per_length'] = Data['Count'] / Data['Length']
         Data['Norm'] = Data['Count'] / (Data['Length'] * Data['count_per_length'].sum())
+        Data['Norm'] = np.log10(Data['Norm'] + 1)
         Median_Norm = Data['Norm'].median()
         Data['Norm'] = Data['Norm'] - Median_Norm
         

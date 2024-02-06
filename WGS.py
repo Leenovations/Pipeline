@@ -439,7 +439,7 @@ def ChromosomalCNV(name):
     Data['Length'] = Data['End'] - Data['Start']
     Data['count_per_length'] = Data['Count'] / Data['Length']
     Data['Norm'] = Data['Count'] / (Data['Length'] * Data['count_per_length'].sum())
-    Data['Norm'] = np.log2(Data['Norm'] + 1)
+    Data['Norm'] = np.log10(Data['Norm'] + 1)
     Median_Norm = Data['Norm'].median()
     Data['Norm'] = Data['Norm'] - Median_Norm
     
@@ -735,6 +735,8 @@ elif BATCH["Step"] == "FastQC":
     PreQC(R1, R2)
     Trimming(Name, R1, R2)
     PostQC(Name)
+elif BATCH["Step"] == "Trimming":
+    Trimming(Name, R1, R2)
 elif BATCH["Step"] == "Align":
     bwaindex()
     bwa(Name)
@@ -747,8 +749,12 @@ elif BATCH["Step"] == "Mutation":
     haplotypecaller(Name)
     mutect2(Name)
     varscan2(Name)
+elif BATCH["Step"] == "Annotation":
+    Annotation(Name)
+elif BATCH["Step"] == "GeneCNV":
+    GeneCNV(Name)
+elif BATCH["Step"] == "ChromosomalCNV":
+    ChromosomalCNV(Name)
 elif BATCH["Step"] == "SV":
     SV(Name)
-elif BATCH["Step"] == "ChromosomeCNV":
-    pass
 #----------------------------------------------------------------------------------------#
