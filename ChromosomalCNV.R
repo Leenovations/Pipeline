@@ -36,8 +36,11 @@ max_values <- max_values[1:length(max_values)-1]
 labels <- Chromosome
 data <- data.frame(x = median_values, y = 1)
 #-----------------------------------------------------------------------------------#
+model <- lm(Norm ~ poly(Order, 2, raw = TRUE), data = Data)
+#-----------------------------------------------------------------------------------#
 CNV <- ggplot(Data, aes(x=Order, y=Norm)) +
   geom_point(size=0.5) +
+  geom_line(aes(y = predict(model, Data)), color = "red", linewidth = 0.5) + 
   ggtitle('Chromosomal copy numbers\n', subtitle = sprintf('%s', Sample)) + 
   xlab('') +
   ylab('Normalized Depth') +
@@ -66,14 +69,17 @@ CNV <- ggplot(Data, aes(x=Order, y=Norm)) +
         axis.text.x=element_blank())
 #-----------------------------------------------------------------------------------#
 if (Type=='WGBS'){
-  ggsave(paste0(Path, '/04.ChromosomeCNV/', sprintf('%s', Sample), '.Chromosome.pdf'),
+  ggsave(paste0(Path, '/04.ChromosomeCNV/', sprintf('%s', Sample), '.ChromosomeCNV.pdf'),
          plot=CNV,
          width=15)
-  ggsave(paste0(Path, '/04.ChromosomeCNV/', sprintf('%s', Sample), '.Chromosome.png'),
+  ggsave(paste0(Path, '/04.ChromosomeCNV/', sprintf('%s', Sample), '.ChromosomeCNV.png'),
          plot=CNV,
          width=15)
 } else if (Type=='WGS'){
-  ggsave(paste0(Path, '/05.SV/', sprintf('%s', Sample), '.Chromosome.pdf'),
+  ggsave(paste0(Path, '/05.SV/00.ChromosomeCNV/', sprintf('%s', Sample), '.ChromosomeCNV.pdf'),
+         plot=CNV,
+         width=15)
+  ggsave(paste0(Path, '/05.SV/00.ChromosomeCNV/', sprintf('%s', Sample), '.ChromosomeCNV.png'),
          plot=CNV,
          width=15)
 }

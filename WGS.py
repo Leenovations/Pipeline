@@ -424,10 +424,14 @@ def ChromosomalCNV(name):
         command = "mkdir -p 05.SV/00.ChromosomeCNV"
         os.system(command)
     
-    command = f"samtools bedcov \
-                /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/1MB.exclude.centromere.bed \
-                03.Align/{name}.bam > 05.SV/00.ChromosomeCNV/{name}.bedcov"
-    os.system(command)
+    if os.path.exists(f"05.SV/00.ChromosomeCNV/{name}.bedcov"):
+        pass
+    else:
+        command = f"samtools bedcov \
+                    /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/1MB.exclude.centromere.bed \
+                    03.Align/{name}.bam > 05.SV/00.ChromosomeCNV/{name}.bedcov"
+        os.system(command)
+
 
     Chromosome = [str(i) for i in range(1,23)] + ['X', 'Y']
     Data = pd.read_csv(f"05.SV/00.ChromosomeCNV/{name}.bedcov",
@@ -436,6 +440,7 @@ def ChromosomalCNV(name):
                     names = ['Chr', 'Start', 'End', 'Count'],
                     low_memory=False)
     
+    Data = Data[Data['Count'] != 0]
     Data['Length'] = Data['End'] - Data['Start']
     Data['count_per_length'] = Data['Count'] / Data['Length']
     Data['Norm'] = Data['Count'] / (Data['Length'] * Data['count_per_length'].sum())
@@ -455,7 +460,7 @@ def ChromosomalCNV(name):
                         header='infer',
                         index=False)
     
-    command = f"Rscript /labmed/00.Code/Pipeline/WGS.ChromosomalCNV.R {name}"
+    command = f"Rscript /labmed/00.Code/Pipeline/ChromosomalCNV.R {name}"
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def GeneCNV(name):

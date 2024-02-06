@@ -171,7 +171,7 @@ if BATCH["Bismark"] == "Y":
                             header='infer',
                             index=False)
         
-        command = f"Rscript /labmed/00.Code/Pipeline/WGS.ChromosomalCNV.R {name}"
+        command = f"Rscript /labmed/00.Code/Pipeline/ChromosomalCNV.R {name}"
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def HTML(name):
