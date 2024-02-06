@@ -120,7 +120,7 @@ if BATCH["Bismark"] == "Y":
             os.system(command)
     
         command = f"bismark_methylation_extractor \
-                    -p --no_overlap --bedGraph --gzip --multicore 20 --cytosine_report \
+                    -p --no_overlap --bedGraph --gzip --multicore {BATCH['CPU']} --cytosine_report \
                     --genome_folder /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation \
                     --comprehensive --merge_non_CpG \
                     -o 03.Align \
