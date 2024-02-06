@@ -31,7 +31,7 @@ for (chr in Chromosome) {
   max_values <- c(max_values, max(Sub$Order))
   median_values <- c(median_values, median(Sub$Order))
 }
-max_values <- max_values[1:length(max_values)-1]
+max_values <- max_values[1 : length(max_values)-1] # nolint: seq_linter.
 #-----------------------------------------------------------------------------------#
 labels <- Chromosome
 data <- data.frame(x = median_values, y = 1)
@@ -40,7 +40,6 @@ model <- lm(Norm ~ poly(Order, 2, raw = TRUE), data = Data)
 #-----------------------------------------------------------------------------------#
 CNV <- ggplot(Data, aes(x=Order, y=Norm)) +
   geom_point(size=0.5) +
-  geom_line(aes(y = predict(model, Data)), color = "red", linewidth = 0.5) + 
   ggtitle('Chromosomal copy numbers\n', subtitle = sprintf('%s', Sample)) + 
   xlab('') +
   ylab('Normalized Depth') +
