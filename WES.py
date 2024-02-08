@@ -47,7 +47,8 @@ def Trimming(name, r1, r2):
         command = "mkdir 02.Trimmed"
         os.system(command)
 
-    command = f"trim_galore --paired --gzip \
+    command = f"/media/src/Tools/TrimGalore-0.6.10/trim_galore \
+                 --paired --gzip \
                 -j {BATCH['CPU']} \
                 -o 02.Trimmed --basename {name} \
                 {r1} {r2}"
