@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import numpy as np
 import argparse
-import sys
 #-----------------------------------------------------------------------------#
 parser = argparse.ArgumentParser(description="Pipeline Usage")
 args = parser.parse_args()
@@ -69,7 +68,7 @@ if BATCH["Bismark"] == "Y":
         else:
             command = f"bismark_genome_preparation --path_to_aligner \
                         /Bioinformatics/00.Tools/bowtie2-2.4.5 \
-                        --parallel 20 \
+                        --parallel {BATCH['CPU']} \
                         --verbose \
                         /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation/"
             os.system(command)
@@ -184,17 +183,17 @@ if BATCH["Bismark"] == "Y":
         os.system(command)
 #----------------------------------------------------------------------------------------#
     if BATCH["Step"] == "All":
-        # PreQC(R1, R2)
-        # Trimming(Name, R1, R2)
-        # PostQC(Name)
-        # Index()
-        # Align(Name)
-        # Dedup(Name)
-        # Lambda(Name)
+        PreQC(R1, R2)
+        Trimming(Name, R1, R2)
+        PostQC(Name)
+        Index()
+        Align(Name)
+        Dedup(Name)
+        Lambda(Name)
         bamflt(Name)
         Extract(Name)
-        # ChromosomalCNV(Name)
-        # HTML(Name)
+        ChromosomalCNV(Name)
+        HTML(Name)
     elif BATCH["Step"] == "FastQC":
         PreQC(R1, R2)
         Trimming(Name, R1, R2)
