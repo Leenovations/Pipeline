@@ -1,4 +1,4 @@
- #!/home/lab/anaconda3/envs/NGS/bin/python3
+#!/home/lab/anaconda3/envs/NGS/bin/python3
 
 import sys
 import os
