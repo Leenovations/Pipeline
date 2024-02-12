@@ -109,7 +109,7 @@ if BATCH["Bismark"] == "Y":
             command = f"mkdir -p 03.Align/"
             os.system(command)
 
-        command = f"samtools view -f 2 -bq {BATCH['bq']} {name}.deduplicated.bam -o 03.Align/{name}.flt.bam"
+        command = f"samtools view -f 2 -bq {BATCH['bq']} 03.Align/{name}.deduplicated.bam -o 03.Align/{name}.flt.bam"
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def Extract(name):
@@ -184,13 +184,13 @@ if BATCH["Bismark"] == "Y":
         os.system(command)
 #----------------------------------------------------------------------------------------#
     if BATCH["Step"] == "All":
-        PreQC(R1, R2)
-        Trimming(Name, R1, R2)
-        PostQC(Name)
-        Index()
-        Align(Name)
-        Dedup(Name)
-        Lambda(Name)
+        # PreQC(R1, R2)
+        # Trimming(Name, R1, R2)
+        # PostQC(Name)
+        # Index()
+        # Align(Name)
+        # Dedup(Name)
+        # Lambda(Name)
         bamflt(Name)
         Extract(Name)
         ChromosomalCNV(Name)

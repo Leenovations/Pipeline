@@ -110,7 +110,7 @@ def AddOrReplaceReadGroups(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 AddOrReplaceReadGroups \
                 I=03.Align/{name}.flt.bam \
                 O=03.Align/{name}.sorted.bam \
@@ -134,7 +134,7 @@ def markduplicate(name):
     command = f"java \
                 -Xmx5G \
                 -XX:ParallelGCThreads={2*int(BATCH['CPU'])} \
-                -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
+                -jar /media/src/Tools/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar \
                 MarkDuplicates \
                 I=03.Align/{name}.sorted.bam \
                 O=03.Align/{name}.MarkDuplicate.bam \
@@ -380,15 +380,15 @@ def Annotation(name):
                 03.Align/{name}.PASS.vcf > 03.Align/{name}.snpeff.vcf"
     os.system(command)
 
-    command = f"convert2annovar.pl -includeinfo -allsample -withfreq -format vcf4 03.Align/{name}.snpeff.vcf > 04.Annotation/{name}.avinput"
+    command = f"/media/src/Tools/annovar/convert2annovar.pl -includeinfo -allsample -withfreq -format vcf4 03.Align/{name}.snpeff.vcf > 04.Annotation/{name}.avinput"
     os.system(command)
 
-    command = f"annotate_variation.pl -geneanno -out 04.Annotation/{name}.hgvs -build hg{BATCH['Ref.ver'].split('g')[1]} \
+    command = f"/media/src/Tools/annovar/annotate_variation.pl -geneanno -out 04.Annotation/{name}.hgvs -build hg{BATCH['Ref.ver'].split('g')[1]} \
                 -dbtype refGene \
                 -hgvs 04.Annotation/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb"
     os.system(command)
 
-    command = f"table_annovar.pl 04.Annotation/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb \
+    command = f"/media/src/Tools/annovar/table_annovar.pl 04.Annotation/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb \
                 -buildver hg{BATCH['Ref.ver'].split('g')[1]} -out 04.Annotation/{name} \
                 -remove -protocol \
                 refGene,dbnsfp33a,cosmic70,snp138,snp138NonFlagged,popfreq_max_20150413,popfreq_all_20150413,dbscsnv11,exac03nontcga,avsnp147,clinvar_20160302,gnomad_exome,gnomad_genome \
@@ -432,7 +432,6 @@ def ChromosomalCNV(name):
                     /media/src/hg{BATCH['Ref.ver'].split('g')[1]}/04.cnv/1MB.exclude.centromere.bed \
                     03.Align/{name}.bam > 05.SV/00.ChromosomeCNV/{name}.bedcov"
         os.system(command)
-
 
     Chromosome = [str(i) for i in range(1,23)] + ['X', 'Y']
     Data = pd.read_csv(f"05.SV/00.ChromosomeCNV/{name}.bedcov",
@@ -521,7 +520,7 @@ def GeneCNV(name):
                     index=False,
                     header='infer')
         
-        command = f"Rscript /labmed/00.Code/Pipeline/WGS.GeneCNV.VIZ.R {name} {gene}"
+        command = f"Rscript /labmed/00.Code/Pipeline/GeneCNV.R {name} {gene}"
         os.system(command)
 
     command = f"rm -rf 05.SV/01.GeneCNV/*.bedcov"
@@ -710,19 +709,19 @@ def Results(name):
     writer.save()
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == "All":
-    PreQC(R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name)
-    bwaindex()
-    bwa(Name)
-    Bamflt(Name)
-    AddOrReplaceReadGroups(Name)
-    markduplicate(Name)
-    makedict()
-    baserecalibrator(Name)
-    applyBQSR(Name)
+    # PreQC(R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name)
+    # bwaindex()
+    # bwa(Name)
+    # Bamflt(Name)
+    # AddOrReplaceReadGroups(Name)
+    # markduplicate(Name)
+    # makedict()
+    # baserecalibrator(Name)
+    # applyBQSR(Name)
     if BATCH['Germline'] == 'Y':
-        haplotypecaller(Name)
+        # haplotypecaller(Name)
         Variantfilter(Name)
         Annotation(Name)
         SV(Name)

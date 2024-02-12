@@ -462,7 +462,7 @@ def GeneCNV(name):
                     index=False,
                     header='infer')
         
-        command = f"Rscript /labmed/00.Code/Pipeline/WGS.GeneCNV.VIZ.R {name} {gene}"
+        command = f"Rscript /labmed/00.Code/Pipeline/GeneCNV.R {name} {gene}"
         os.system(command)
 
     command = f"rm -rf 05.SV/01.GeneCNV/*.bedcov"
