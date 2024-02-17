@@ -177,9 +177,9 @@ if BATCH["Bismark"] == "Y":
     def HTML(name):
         command = f"bismark2report --output 03.Align/{name}.html \
                     --alignment_report 03.Align/{name}_val_1_bismark_bt2_PE_report.txt \
-                    --dedup_report 03.Align/{name}_val_1_bismark_bt2_pe.deduplication_report.txt \
-                    --splitting_report 03.Align/{name}.deduplicated_splitting_report.txt \
-                    --mbias_report 03.Align/{name}.deduplicated.M-bias.txt \
+                    --dedup_report 03.Align/{name}.deduplication_report.txt \
+                    --splitting_report 03.Align/{name}.flt_splitting_report.txt \
+                    --mbias_report 03.Align/{name}.flt.M-bias.txt \
                     --nucleotide_report 03.Align/{name}_val_1_bismark_bt2_pe.nucleotide_stats.txt"
         os.system(command)
 #----------------------------------------------------------------------------------------#
