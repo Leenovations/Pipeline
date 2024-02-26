@@ -120,7 +120,7 @@ if BATCH["Bismark"] == "Y":
             os.system(command)
     
         command = f"bismark_methylation_extractor \
-                    -p --no_overlap --bedGraph --gzip --multicore {BATCH['CPU']} --cytosine_report \
+                    -p --no_overlap --bedGraph --gzip --multicore {BATCH['CPU']} --cytosine_report -zero_based\
                     --genome_folder /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation \
                     --comprehensive --merge_non_CpG \
                     -o 03.Align \
@@ -182,6 +182,12 @@ if BATCH["Bismark"] == "Y":
                     --mbias_report 03.Align/{name}.flt.M-bias.txt \
                     --nucleotide_report 03.Align/{name}_val_1_bismark_bt2_pe.nucleotide_stats.txt"
         os.system(command)
+
+        command = f"bismark2summary --basename 03.Align/{name}.html --title {name}"
+        os.system(command)
+
+        command = f"methylation_consistency --min-count 3 --lower_threshold 5 --upper_threshold 95 03.Align/{name}.sorted.bam > 03.Align/{name}.Consistency.Report.txt"
+        os.system(command)
 #----------------------------------------------------------------------------------------#
     if BATCH["Step"] == "All":
         PreQC(R1, R2)
@@ -211,6 +217,7 @@ if BATCH["Bismark"] == "Y":
         bamflt(Name)
     elif BATCH["Step"] == "Extract":
         Extract(Name)
+        HTML(Name)
     elif BATCH["Step"] == "ChromosomeCNV":
         ChromosomalCNV(Name)
 #-----------------------------------------------------------------------------#
