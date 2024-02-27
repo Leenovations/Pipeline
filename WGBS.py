@@ -83,6 +83,7 @@ if BATCH["Bismark"] == "Y":
 
         command = f"bismark \
                     --multicore {BATCH['CPU']} --un --ambiguous --gzip --nucleotide_coverage \
+                    -N {BATCH['AllowMismatch']} -L {BATCH['MultiSeedLength']} \
                     --temp_dir TEMP \
                     -o 03.Align/ \
                     --genome /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation/ \
@@ -120,7 +121,7 @@ if BATCH["Bismark"] == "Y":
             os.system(command)
     
         command = f"bismark_methylation_extractor \
-                    -p --no_overlap --bedGraph --gzip --multicore {BATCH['CPU']} --cytosine_report -zero_based\
+                    -p --no_overlap --bedGraph --gzip --multicore {BATCH['CPU']} --cytosine_report -zero_based \
                     --genome_folder /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation \
                     --comprehensive --merge_non_CpG \
                     -o 03.Align \
@@ -183,10 +184,10 @@ if BATCH["Bismark"] == "Y":
                     --nucleotide_report 03.Align/{name}_val_1_bismark_bt2_pe.nucleotide_stats.txt"
         os.system(command)
 
-        command = f"bismark2summary --basename 03.Align/{name}.html --title {name}"
+        command = f"bismark2summary --basename 03.Align/{name}.summary.html --title {name}"
         os.system(command)
 
-        command = f"methylation_consistency --min-count 3 --lower_threshold 5 --upper_threshold 95 03.Align/{name}.sorted.bam > 03.Align/{name}.Consistency.Report.txt"
+        command = f"methylation_consistency --min-count 5 03.Align/{name}.flt.bam 2> 03.Align/{name}.Consistency.Report.txt"
         os.system(command)
 #----------------------------------------------------------------------------------------#
     if BATCH["Step"] == "All":
@@ -216,7 +217,7 @@ if BATCH["Bismark"] == "Y":
     elif BATCH["Step"] == "Bamflt":
         bamflt(Name)
     elif BATCH["Step"] == "Extract":
-        Extract(Name)
+        # Extract(Name)
         HTML(Name)
     elif BATCH["Step"] == "ChromosomeCNV":
         ChromosomalCNV(Name)
