@@ -43,7 +43,7 @@ if BATCH["Bismark"] == "Y":
             command = "mkdir 02.Trimmed"
             os.system(command)
 
-        command = f"/media/src/Tools/TrimGalore-0.6.10/trim_galore \
+        command = f"/media/src/Tools/TrimGalore-0.6.10/ \
                     --paired --gzip \
                     -j {BATCH['CPU']} \
                     -o 02.Trimmed --basename {name} \
@@ -217,7 +217,7 @@ if BATCH["Bismark"] == "Y":
     elif BATCH["Step"] == "Bamflt":
         bamflt(Name)
     elif BATCH["Step"] == "Extract":
-        # Extract(Name)
+        Extract(Name)
         HTML(Name)
     elif BATCH["Step"] == "ChromosomeCNV":
         ChromosomalCNV(Name)
