@@ -83,6 +83,8 @@ def QCPDF(name):
     pdf.set_font("Arial",style = 'B', size = 12)
     pdf.text(20, 170, txt = '3. Sequencing Statistics')
 
+    pdf.image(f'03.Align/QCplot.png', x = 20, y = 180, w = 70, h = 70, type = 'PNG')
+
     Info = {}
     with open(f'03.Align/{name}.stats', 'r') as handle:
         for line in handle:
@@ -97,87 +99,63 @@ def QCPDF(name):
     Average_length = Info['average length']
     Average_qual = Info['average quality']
     Average_insert = Info['insert size average']
-
-    Target_Info = {}
-    with open(f'04.QC/{name}.Ontarget.stats', 'r') as handle:
-        for line in handle:
-            if line.startswith('SN'):
-                line = line.strip()
-                splitted = line.split('\t')
-                Target_Info[splitted[1][:-1]] = splitted[2]
-                
-    Target_Mapped_read = int(Target_Info['reads mapped'])
-    
     Percent = str(round(int(Mapped_read)/int(Total_read)*100))
-    Ontarget = str(round(int(Target_Mapped_read)/int(Mapped_read)*100))
 
-    pdf.set_font("Arial", size = 11)
-    pdf.set_xy(20, 175)
+    pdf.set_font("Arial", size = 9)
+    pdf.set_xy(100, 180)
     pdf.set_fill_color(r = 150, g = 150, b = 150)
-    pdf.cell(57,10, txt = 'Total base', align = 'C', border=1, ln=0, fill = True)
-    pdf.cell(57,10, txt = 'Total read', align = 'C', border=1, fill = True)
-    pdf.cell(57,10, txt = 'Mapped read', align = 'C', border=1, ln=0, fill = True)
-    pdf.set_xy(20, 185)
-    pdf.cell(57,10, txt = str(format(Total_base, ',')), align = 'C', border=1)
-    pdf.cell(57,10, txt = str(format(Total_read, ',')), align = 'C', border=1)
-    pdf.cell(57,10, txt = "{:,} ({} %)".format(Mapped_read, Percent), align = 'C', border=1)
+    pdf.cell(30,7, txt = 'Total base', align = 'C', border=1, ln=0, fill = True)
+    pdf.cell(30,7, txt = 'Total read', align = 'C', border=1, fill = True)
+    pdf.cell(30,7, txt = 'Mapped read', align = 'C', border=1, ln=0, fill = True)
+    pdf.set_xy(100, 187)
+    pdf.cell(30,7, txt = str(format(Total_base, ',')), align = 'C', border=1)
+    pdf.cell(30,7, txt = str(format(Total_read, ',')), align = 'C', border=1)
+    pdf.cell(30,7, txt = "{:,} ({} %)".format(Mapped_read, Percent), align = 'C', border=1)
 
-    pdf.set_xy(20, 195)
+    pdf.set_xy(100, 194)
     pdf.set_fill_color(r = 150, g = 150, b = 150)
-    pdf.cell(57,10, txt = 'Average Length', align = 'C', border=1, ln=0, fill = True)
-    pdf.cell(57,10, txt = 'Average Insert size', align = 'C', border=1, fill = True)
-    pdf.cell(57,10, txt = 'Average Quality', align = 'C', border=1, ln=0, fill = True)
-    pdf.set_xy(20, 205)
-    pdf.cell(57,10, txt = Average_length, align = 'C', border=1)
-    pdf.cell(57,10, txt = Average_insert, align = 'C', border=1)
-    pdf.cell(57,10, txt = Average_qual, align = 'C', border=1)
+    pdf.cell(30,7, txt = 'Average Length', align = 'C', border=1, ln=0, fill = True)
+    pdf.cell(30,7, txt = 'Average Insert size', align = 'C', border=1, fill = True)
+    pdf.cell(30,7, txt = 'Average Quality', align = 'C', border=1, ln=0, fill = True)
+    pdf.set_xy(100, 201)
+    pdf.cell(30,7, txt = Average_length, align = 'C', border=1)
+    pdf.cell(30,7, txt = Average_insert, align = 'C', border=1)
+    pdf.cell(30,7, txt = Average_qual, align = 'C', border=1)
 
-    # pdf.set_xy(20, 215)
-    # pdf.set_fill_color(r = 150, g = 150, b = 150)
-    # pdf.cell(171,10, txt = 'Ontarget %', align = 'C', border=1, fill = True)
-    # pdf.set_xy(20, 225)
-    # pdf.cell(171,10, txt = Ontarget + ' %', align = 'C', border=1)
+    pdf.set_xy(100, 208)
+    pdf.set_fill_color(r = 112, g = 128, b = 144)
+    pdf.cell(30,7, txt = 'All methylated', align = 'C', border=1, ln=0, fill = True)
+    pdf.cell(30,7, txt = 'All unmethylated ', align = 'C', border=1, fill = True)
+    pdf.cell(30,7, txt = 'Mixed methylation', align = 'C', border=1, ln=0, fill = True)
+    pdf.set_xy(100, 215)
+    pdf.cell(30,7, txt = '84.41 %', align = 'C', border=1)
+    pdf.cell(30,7, txt = '0.00 %', align = 'C', border=1)
+    pdf.cell(30,7, txt = '0.45 %', align = 'C', border=1)
 
-#Category 4 
-    pdf.set_font("Arial", style = 'B', size = 12)
-    pdf.text(20, 225, txt = '4. STAR Alignment Statistics')
+    pdf.set_xy(100, 222)
+    pdf.set_fill_color(r = 112, g = 128, b = 144)
+    pdf.cell(90,7, txt = 'Duplication rate', align = 'C', border=1, ln=0, fill = True)
+    pdf.set_xy(100, 229)
+    pdf.cell(90,7, txt = '74.57 %', align = 'C', border=1)
 
-    Info = {}
-    with open(f'04.QC/{name}_Log.final.out', 'r') as handle:
-        for line in handle:
-            line = line.strip()
-            if '%' in line:
-                line = line.replace('\t', '')
-                splitted = line.split('|')
-                Info[splitted[0]] = splitted[1]
+    pdf.set_xy(100, 236)
+    pdf.set_fill_color(r = 112, g = 128, b = 144)
+    pdf.cell(45,7, txt = 'Mapping efficiency', align = 'C', border=1, ln=0, fill = True)
+    pdf.cell(45,7, txt = 'Conversion rate', align = 'C', border=1, ln=0, fill = True)
+    pdf.set_xy(100, 243)
+    pdf.cell(45,7, txt = '99.04 %', align = 'C', border=1)
+    pdf.cell(45,7, txt = '99 %', align = 'C', border=1)
 
-    pdf.set_font("Arial", size = 11)
-    pdf.set_xy(20, 230)
-    pdf.set_fill_color(r = 150, g = 150, b = 150)
-    pdf.cell(57,10, txt = list(Info.keys())[0], align = 'C', border=1, ln=0, fill = True)
-    pdf.cell(57,10, txt = list(Info.keys())[1].replace(',',''), align = 'C', border=1, ln=0, fill = True)
-    pdf.cell(57,10, txt = "Chimeric reads %", align = 'C', border=1, ln=0, fill = True)
-    pdf.set_xy(20, 240)
-    pdf.cell(57,10, txt = Info[list(Info.keys())[0]], align = 'C', border=1)
-    pdf.cell(57,10, txt = Info[list(Info.keys())[1]], align = 'C', border=1)
-    pdf.cell(57,10, txt = Info[list(Info.keys())[-1]], align = 'C', border=1)
+    pdf.set_fill_color(r=100, g=100, b=100)
+    pdf.line(Center_x-95, pdf.h-20, Center_x+95, pdf.h-20)
 
-    pdf.set_xy(20, 250)
-    pdf.set_fill_color(r = 150, g = 150, b = 150)
-    pdf.cell(57,10, txt = "Multiple loci mapped reads %", align = 'C', border=1, ln=0, fill = True)
-    pdf.cell(57,10, txt = "Too many loci mapped reads %", align = 'C', border=1, ln=0, fill = True)
-    pdf.cell(57,10, txt = "Too short unmapped reads %", align = 'C', border=1, ln=0, fill = True)
-    pdf.set_xy(20, 260)
-    pdf.cell(57,10, txt = Info[list(Info.keys())[4]], align = 'C', border=1)
-    pdf.cell(57,10, txt = Info[list(Info.keys())[5]], align = 'C', border=1)
-    pdf.cell(57,10, txt = Info[list(Info.keys())[6]], align = 'C', border=1)
 
 # save the pdf
-    pdf.output(f"04.QC/{name}.QC.pdf")
+    pdf.output(f"03.Align/{name}.QC.pdf")
 #----------------------------------------------------------------------------------------#
 def pdfconverter(name):
-    images = convert_from_path(f"04.QC/{name}.QC.pdf")
+    images = convert_from_path(f"03.Align/{name}.QC.pdf")
 
     for page, image in enumerate(images):
-        image.save(f"04.QC/{name}.QC.page{page}.jpg", "JPEG")
+        image.save(f"03.Align/{name}.QC.page{page}.jpg", "JPEG")
 #----------------------------------------------------------------------------------------#
