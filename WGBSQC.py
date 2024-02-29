@@ -149,7 +149,6 @@ def QCPDF(name):
     pdf.set_fill_color(r=100, g=100, b=100)
     pdf.line(Center_x-95, pdf.h-20, Center_x+95, pdf.h-20)
 
-
 # save the pdf
     pdf.output(f"03.Align/{name}.QC.pdf")
 #----------------------------------------------------------------------------------------#
