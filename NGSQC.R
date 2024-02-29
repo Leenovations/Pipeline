@@ -9,7 +9,7 @@ Name <- Sample[1, 1]
 R1 <- Sample[1, 2]
 R2 <- Sample[1, 3]
 #---------------------------------------------------------------#
-Data <- read.table(sprintf('02.BamQC/%s.coverage.txt', Name),
+Data <- read.table(sprintf('03.Align/%s.coverage.txt', Name),
                    sep='\t',
                    header=F)[1:24,]
 #---------------------------------------------------------------#
@@ -41,7 +41,7 @@ Coverage <- ggplot(Data, aes(x=V1, y=V6)) +
         axis.title.y=element_text(size=10, face='bold'))
 #---------------------------------------------------------------#
 #---------------------------------------------------------------#
-Data <- read.table(sprintf('02.BamQC/%s.DepthofCoverage.txt', Name),
+Data <- read.table(sprintf('03.Align/%s.DepthofCoverage.txt', Name),
                    sep='\t',
                    header=F,
                    col.names = c('Depth', 'Count'))
@@ -67,7 +67,7 @@ DepthOfCoverage <- ggplot(Data, aes(x=Depth, y=Count)) +
 #---------------------------------------------------------------#
 QCplot <- DepthOfCoverage + Depth + Coverage + plot_layout(ncol = 1)
 #---------------------------------------------------------------#
-ggsave('03.Plots/QCplot.png',
+ggsave('03.Align/QCplot.png',
         height=5,
         width=5,
         plot=QCplot)
