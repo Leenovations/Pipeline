@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 import argparse
+from DepthofCoverage import *
 #-----------------------------------------------------------------------------#
 parser = argparse.ArgumentParser(description="Pipeline Usage")
 args = parser.parse_args()
@@ -136,6 +137,20 @@ if BATCH["Bismark"] == "Y":
 
         command = f'samtools stats 03.Align/{name}.sorted.bam > 03.Align/{name}.stats'
         os.system(command)
+
+        command = f"samtools view -H 03.Align/{name}.sorted.bam > 03.Align/{name}.header.txt"
+        os.system(command)
+
+        command = f"samtools depth -a 03.Align/{name}.sorted.bam > 03.Align/{name}.all.depth.txt"
+        os.system(command)
+
+        DepthOfCoverage(name)
+
+        command = f"samtools coverage 03.Align/{name}.sorted.bam -o 03.Align/{name}.coverage.txt"
+        os.system(command)
+
+        command = f"Rscript /labmed/01.ALL/ltk/00.Pipeline/NGSQC.R"
+        os.system(command)
 #----------------------------------------------------------------------------------------#
     def ChromosomalCNV(name):
         if os.path.isdir("04.ChromosomeCNV"):
@@ -221,7 +236,7 @@ if BATCH["Bismark"] == "Y":
         bamflt(Name)
     elif BATCH["Step"] == "Extract":
         Extract(Name)
-        HTML(Name)
+        # HTML(Name)
     elif BATCH["Step"] == "ChromosomeCNV":
         ChromosomalCNV(Name)
 #-----------------------------------------------------------------------------#

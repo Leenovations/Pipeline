@@ -84,7 +84,7 @@ def QCPDF(name):
     pdf.text(20, 170, txt = '3. Sequencing Statistics')
 
     Info = {}
-    with open(f'04.QC/{name}.stats', 'r') as handle:
+    with open(f'03.Align/{name}.stats', 'r') as handle:
         for line in handle:
             if line.startswith('SN'):
                 line = line.strip()
