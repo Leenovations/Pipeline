@@ -114,24 +114,27 @@ if BATCH["Bismark"] == "Y":
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def Extract(name):
-        if os.path.isdir(f"03.Align/"):
-            pass
-        else:
-            command = f"mkdir -p 03.Align/"
-            os.system(command)
+        # if os.path.isdir(f"03.Align/"):
+        #     pass
+        # else:
+        #     command = f"mkdir -p 03.Align/"
+        #     os.system(command)
     
-        command = f"bismark_methylation_extractor \
-                    -p --no_overlap --bedGraph --gzip --multicore {BATCH['CPU']} --cytosine_report -zero_based \
-                    --genome_folder /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation \
-                    --comprehensive --merge_non_CpG \
-                    -o 03.Align \
-                    03.Align/{name}.flt.bam"
-        os.system(command)
+        # command = f"bismark_methylation_extractor \
+        #             -p --no_overlap --bedGraph --gzip --multicore {BATCH['CPU']} --cytosine_report -zero_based \
+        #             --genome_folder /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation \
+        #             --comprehensive --merge_non_CpG \
+        #             -o 03.Align \
+        #             03.Align/{name}.flt.bam"
+        # os.system(command)
 
-        command = f"samtools sort -@ {int(BATCH['CPU']) * 2} 03.Align/{name}.flt.bam -o 03.Align/{name}.sorted.bam"
-        os.system(command)
+        # command = f"samtools sort -@ {int(BATCH['CPU'])} 03.Align/{name}.flt.bam -o 03.Align/{name}.sorted.bam"
+        # os.system(command)
 
-        command = f"samtools index -@ {int(BATCH['CPU']) * 2} 03.Align/{name}.sorted.bam"
+        # command = f"samtools index -@ {int(BATCH['CPU'])} 03.Align/{name}.sorted.bam"
+        # os.system(command)
+
+        command = f'samtools stats 03.Align/{name}.sorted.bam > 03.Align/{name}.stats'
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def ChromosomalCNV(name):
