@@ -85,7 +85,7 @@ if BATCH["Bismark"] == "Y":
 
         command = f"bismark \
                     --multicore {BATCH['CPU']} --un --ambiguous --gzip --nucleotide_coverage \
-                    -N {BATCH['AllowMismatch']} -L {BATCH['MultiSeedLength']} \
+                    -N {BATCH['AllowMismatch']} -L {BATCH['SeedLength']} \
                     --temp_dir TEMP \
                     -o 03.Align/ \
                     --genome /Bioinformatics/01.Reference/{BATCH['Ref.ver']}/Methylation/ \
