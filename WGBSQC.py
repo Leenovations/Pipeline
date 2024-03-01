@@ -28,15 +28,13 @@ def QCPDF(name):
 # Adding a page
     pdf.add_page()
         
-# set style and size of font 
-    pdf.set_font("Arial", size = 15)
-
 # set center location of x (210 : A4)
     Center_x = pdf.w / 2 # 105
         
 # create a cell
     pdf.set_fill_color(r=100, g=100, b=100)
     pdf.line(Center_x-95, 20, Center_x+95, 20)
+    pdf.set_font("Arial", size = 15)
     pdf.text(20, 11, txt = 'WGBS QC')
 
 #Sample Name
@@ -122,33 +120,79 @@ def QCPDF(name):
     pdf.cell(30,7, txt = Average_insert, align = 'C', border=1)
     pdf.cell(30,7, txt = Average_qual, align = 'C', border=1)
 
+    Info = {}
+    with open(f'03.Align/{name}.Consistency.Report.txt', 'r') as handle:
+        for num, line in enumerate(handle):
+            if line.startswith(('All methylated', 'All unmethylated', 'Mixed methylation', 'Too few CpGs')):
+                line = line.strip()
+                splitted = line.split('(')
+                Info[num] = splitted[1].replace('%)', ' %')
+
+    All_methylated = Info[24]
+    All_unmethylated = Info[25]
+    Mixed_methylation = Info[26]
+
     pdf.set_xy(100, 208)
     pdf.set_fill_color(r = 112, g = 128, b = 144)
     pdf.cell(30,7, txt = 'All methylated', align = 'C', border=1, ln=0, fill = True)
     pdf.cell(30,7, txt = 'All unmethylated ', align = 'C', border=1, fill = True)
     pdf.cell(30,7, txt = 'Mixed methylation', align = 'C', border=1, ln=0, fill = True)
     pdf.set_xy(100, 215)
-    pdf.cell(30,7, txt = '84.41 %', align = 'C', border=1)
-    pdf.cell(30,7, txt = '0.00 %', align = 'C', border=1)
-    pdf.cell(30,7, txt = '0.45 %', align = 'C', border=1)
+    pdf.cell(30,7, txt = All_methylated, align = 'C', border=1)
+    pdf.cell(30,7, txt = All_unmethylated, align = 'C', border=1)
+    pdf.cell(30,7, txt = Mixed_methylation, align = 'C', border=1)
+
+    Info = {}
+    with open(f'03.Align/{name}.deduplication_report.txt', 'r') as handle:
+        for num, line in enumerate(handle):
+            if line.startswith('Total number duplicated alignments removed'):
+                line = line.strip()
+                splitted = line.split('(')
+                Info[num] = splitted[1].replace('%)', ' %')
+    
+    Duplication = Info[2]
 
     pdf.set_xy(100, 222)
     pdf.set_fill_color(r = 112, g = 128, b = 144)
     pdf.cell(90,7, txt = 'Duplication rate', align = 'C', border=1, ln=0, fill = True)
     pdf.set_xy(100, 229)
-    pdf.cell(90,7, txt = '74.57 %', align = 'C', border=1)
+    pdf.cell(90,7, txt = Duplication, align = 'C', border=1)
+
+    conversion = {}
+    with open(f'03.Align/{name}_val_1.fq.gz_unmapped_reads_1_bismark_bt2_PE_report.txt', 'r') as handle:
+        for num, line in enumerate(handle):
+            if line.startswith('Mapping efficiency:'):
+                line = line.strip()
+                splitted = line.split('\t')
+                conversion_rate = str(100 - float(splitted[1].replace('%',''))) + ' %'
+                conversion[num] = conversion_rate
+    
+    Conversion = conversion[8]
+
+    efficiency = {}
+    with open(f'03.Align/{name}_val_1_bismark_bt2_PE_report.txt', 'r') as handle:
+        for num, line in enumerate(handle):
+            if line.startswith('Mapping efficiency:'):
+                line = line.strip()
+                splitted = line.split('\t')
+                efficiency[num] = splitted[1].replace('%', ' %')
+
+    Efficiency = efficiency[8]
 
     pdf.set_xy(100, 236)
     pdf.set_fill_color(r = 112, g = 128, b = 144)
     pdf.cell(45,7, txt = 'Mapping efficiency', align = 'C', border=1, ln=0, fill = True)
     pdf.cell(45,7, txt = 'Conversion rate', align = 'C', border=1, ln=0, fill = True)
     pdf.set_xy(100, 243)
-    pdf.cell(45,7, txt = '99.04 %', align = 'C', border=1)
-    pdf.cell(45,7, txt = '99 %', align = 'C', border=1)
+    pdf.cell(45,7, txt = Efficiency, align = 'C', border=1)
+    pdf.cell(45,7, txt = Conversion, align = 'C', border=1)
 
     pdf.set_fill_color(r=100, g=100, b=100)
     pdf.line(Center_x-95, pdf.h-20, Center_x+95, pdf.h-20)
 
+    pdf.set_font("Arial", style='B', size = 10)
+    pdf.set_text_color(204,204,204)
+    pdf.text(Center_x, pdf.h-13, txt = '1/1')
 # save the pdf
     pdf.output(f"03.Align/{name}.QC.pdf")
 #----------------------------------------------------------------------------------------#
