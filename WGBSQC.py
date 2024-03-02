@@ -121,16 +121,16 @@ def QCPDF(name):
     pdf.cell(30,7, txt = Average_qual, align = 'C', border=1)
 
     Info = {}
-    with open(f'03.Align/{name}.Consistency.Report.txt', 'r') as handle:
+    with open(f'03.Align/{name}.flt_consistency_report.txt', 'r') as handle:
         for num, line in enumerate(handle):
             if line.startswith(('All methylated', 'All unmethylated', 'Mixed methylation', 'Too few CpGs')):
                 line = line.strip()
                 splitted = line.split('(')
                 Info[num] = splitted[1].replace('%)', ' %')
 
-    All_methylated = Info[24]
-    All_unmethylated = Info[25]
-    Mixed_methylation = Info[26]
+    All_methylated = Info[2]
+    All_unmethylated = Info[3]
+    Mixed_methylation = Info[4]
 
     pdf.set_xy(100, 208)
     pdf.set_fill_color(r = 112, g = 128, b = 144)

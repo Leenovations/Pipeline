@@ -45,7 +45,7 @@ if BATCH["Bismark"] == "Y":
             command = "mkdir 02.Trimmed"
             os.system(command)
 
-        command = f"/media/src/Tools/TrimGalore-0.6.10/ \
+        command = f"trim_galore \
                     --paired --gzip \
                     -j {BATCH['CPU']} \
                     -o 02.Trimmed --basename {name} \
@@ -153,6 +153,9 @@ if BATCH["Bismark"] == "Y":
         command = f"Rscript /labmed/00.Code/Pipeline/NGSQC.R"
         os.system(command)
 
+        command = f"methylation_consistency 03.Align/{name}.flt.bam"
+        os.system(command)
+
         QCPDF(name)
         pdfconverter(name)
 #----------------------------------------------------------------------------------------#
@@ -207,9 +210,6 @@ if BATCH["Bismark"] == "Y":
         os.system(command)
 
         command = f"bismark2summary --basename 03.Align/{name}.summary.html --title {name}"
-        os.system(command)
-
-        command = f"methylation_consistency --min-count 5 03.Align/{name}.flt.bam 2> 03.Align/{name}.Consistency.Report.txt"
         os.system(command)
 #----------------------------------------------------------------------------------------#
     if BATCH["Step"] == "All":
