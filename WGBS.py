@@ -38,7 +38,7 @@ if BATCH["Bismark"] == "Y":
                 {r2}"
         os.system(command)
 #----------------------------------------------------------------------------------------#
-    def Trimming(name, r1, r2):
+    def Trimming(r1, r2, name):
         if os.path.isdir("02.Trimmed"):
             pass
         else:
@@ -201,16 +201,19 @@ if BATCH["Bismark"] == "Y":
         os.system(command)
 #----------------------------------------------------------------------------------------#
     def HTML(name):
-        command = f"bismark2report --output 03.Align/{name}.html \
-                    --alignment_report 03.Align/{name}_val_1_bismark_bt2_PE_report.txt \
-                    --dedup_report 03.Align/{name}.deduplication_report.txt \
-                    --splitting_report 03.Align/{name}.flt_splitting_report.txt \
-                    --mbias_report 03.Align/{name}.flt.M-bias.txt \
-                    --nucleotide_report 03.Align/{name}_val_1_bismark_bt2_pe.nucleotide_stats.txt"
+        command = f"cd 03.Align; bismark2report; bismark2summary"
         os.system(command)
+        
+        # command = f"bismark2report --output 03.Align/{name}.html \
+        #             --alignment_report 03.Align/{name}_val_1_bismark_bt2_PE_report.txt \
+        #             --dedup_report 03.Align/{name}.deduplication_report.txt \
+        #             --splitting_report 03.Align/{name}.flt_splitting_report.txt \
+        #             --mbias_report 03.Align/{name}.flt.M-bias.txt \
+        #             --nucleotide_report 03.Align/{name}_val_1_bismark_bt2_pe.nucleotide_stats.txt"
+        # os.system(command)
 
-        command = f"bismark2summary --basename 03.Align/{name}.summary.html --title {name}"
-        os.system(command)
+        # command = f"bismark2summary --basename 03.Align/{name}.summary.html --title {name}"
+        # os.system(command)
 #----------------------------------------------------------------------------------------#
     if BATCH["Step"] == "All":
         PreQC(R1, R2)
