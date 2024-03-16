@@ -1,5 +1,5 @@
 #!/home/lab/anaconda3/envs/NGS/bin/python3
-#240203.ver
+#240316.ver
 
 import os
 import time
@@ -69,20 +69,22 @@ def PostQC(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def Refindex():
-    if os.path.isdir(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/'):
+    if os.path.isdir(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/'):
         pass
     else:
         command = f'STAR --runThreadN {BATCH["CPU"]} --runMode genomeGenerate \
-                    --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
+                    --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/ \
                     --sjdbOverhang {BATCH["sjdbOverhang"]} \
-                    --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.GENCODE.v44.annotation.gtf \
-                    --genomeFastaFiles /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/hg{BATCH["Ref.ver"].split("g")[1]}.GENCODE.fa'
+                    --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.NCBI.annotation.gtf \
+                    --genomeFastaFiles /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/hg{BATCH["Ref.ver"].split("g")[1]}.NCBI.fa.gz'
         os.system(command)
 #----------------------------------------------------------------------------------------#
 def STAR(name):
+    os.makedirs('03.Output', exist_ok=True)
+
     command = f'STAR --runThreadN {BATCH["CPU"]} \
-                --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/Index/ \
-                --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.GENCODE.v44.annotation.gtf \
+                --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/ \
+                --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.NCBI.annotation.gtf \
                 --readFilesCommand zcat \
                 --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz \
                 --outSAMtype {BATCH["outSAMtype"]} \
