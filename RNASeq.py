@@ -69,15 +69,16 @@ def PostQC(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def Refindex():
-    if os.path.isdir(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/'):
-        pass
-    else:
-        command = f'STAR --runThreadN {BATCH["CPU"]} --runMode genomeGenerate \
-                    --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/ \
-                    --sjdbOverhang {BATCH["sjdbOverhang"]} \
-                    --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.NCBI.annotation.gtf \
-                    --genomeFastaFiles /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/hg{BATCH["Ref.ver"].split("g")[1]}.NCBI.fa.gz'
-        os.system(command)
+	if os.path.isdir(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/'):
+		pass
+	else:
+		os.makedirs(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/', exist_ok=True)
+		command = f'STAR --runThreadN {BATCH["CPU"]} --runMode genomeGenerate \
+					--genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/ \
+					--sjdbOverhang {BATCH["sjdbOverhang"]} \
+					--sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.NCBI.annotation.gtf \
+					--genomeFastaFiles /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/02.Fasta/hg{BATCH["Ref.ver"].split("g")[1]}.NCBI.fa'
+		os.system(command)
 #----------------------------------------------------------------------------------------#
 def STAR(name):
     os.makedirs('03.Output', exist_ok=True)
@@ -156,7 +157,6 @@ elif BATCH["Step"] == 'FastQC':
 elif BATCH["Step"] == 'Trimming':
     Trimming(Name, R1, R2)
 elif BATCH["Step"] == 'Align':
-    Refindex()
     STAR(Name)
 elif BATCH["Step"] == 'Expression':
     Expression(Name)
