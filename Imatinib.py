@@ -74,22 +74,24 @@ def PostQC(name, r1, r2):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def Refindex():
-    if os.path.isdir(f'/Bioinformatics/01.Reference/hg{sys.argv[1]}/hg{sys.argv[1]}_gencode/'):
+    if os.path.isdir(f'/media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/'):
         pass
     else:
-        command = f'STAR --runThreadN {BATCH["CPU"]} --runMode genomeGenerate \
-                    --genomeDir /Bioinformatics/01.Reference/hg{sys.argv[1]}/hg{sys.argv[1]}_gencode/ \
+        command = f'/media/src/Tools/STAR-2.7.11b/source/STAR --runThreadN {BATCH["CPU"]} \
+                    --runMode genomeGenerate \
+                    --genomeDir /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/NCBI_Index/ \
                     --sjdbOverhang 100 \
-                    --sjdbGTFfile /Bioinformatics/01.Reference/hg{sys.argv[1]}/gencode.v{sys.argv[1]}.annotation.gtf \
-                    --genomeFastaFiles /Bioinformatics/01.Reference/b37/b37.fa'
+                    --sjdbGTFfile /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/00.RNA/hg{BATCH["Ref.ver"].split("g")[1]}.NCBI.annotation.gtf \
+                    --genomeFastaFiles /media/src/hg{BATCH["Ref.ver"].split("g")[1]}/02.Fasta/hg{BATCH["Ref.ver"].split("g")[1]}.NCBI.fa'
         os.system(command)
 #----------------------------------------------------------------------------------------#
 def STAR(name):
-    command = f'STAR --runThreadN {BATCH["CPU"]} --genomeDir /Bioinformatics/01.Reference/hg{sys.argv[1]}/hg{sys.argv[1]}_gencode/ \
+    command = f'/media/src/Tools/STAR-2.7.11b/source/STAR --runThreadN {BATCH["CPU"]} \
+                --genomeDir /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/hg{BATCH["Ref.ver"].split("g")[1]}_gencode/ \
                 --genomeLoad NoSharedMemory \
                 --readFilesIn 02.Trimmed/{name}_val_1.fq.gz 02.Trimmed/{name}_val_2.fq.gz --readFilesCommand zcat \
                 --outStd Log --outSAMtype BAM Unsorted --outSAMunmapped Within --outBAMcompression 0 \
-                --outFilterMultimapNmax 50 --peOverlapNbasesMin 10 --alignSplicedMateMapLminOverLmate 0.5 \
+                --outFilterMultimapNmax 50 --peOverlapNbasesMin 1 --alignSplicedMateMapLminOverLmate 0.5 \
                 --alignSJstitchMismatchNmax 5 -1 5 5 --chimSegmentMin 10 --chimOutType WithinBAM HardClip \
                 --chimJunctionOverhangMin 10 --chimScoreDropMax 30 --chimScoreJunctionNonGTAG 0 --chimScoreSeparation 1 \
                 --chimSegmentReadGapMax 3 --chimMultimapNmax 50 \
@@ -129,27 +131,27 @@ def QC(name, r1, r2):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def Somatic(name, R1, R2):
-    if os.path.isfile(f'/Bioinformatics/01.Reference/hg{sys.argv[1]}/Homo_sapiens_assembly{sys.argv[1]}.fasta.fai'):
+    if os.path.isfile(f'/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.fasta.fai'):
         pass
     else:
-        command = f'samtools faidx /Bioinformatics/01.Reference/hg{sys.argv[1]}/Homo_sapiens_assembly{sys.argv[1]}.fasta'
+        command = f'samtools faidx /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.fasta'
         os.system(command)
 
-    if os.path.isfile(f'/Bioinformatics/01.Reference/hg{sys.argv[1]}/Homo_sapiens_assembly{sys.argv[1]}.dbsnp138.vcf.idx'):
+    if os.path.isfile(f'/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.dbsnp138.vcf.idx'):
         pass
     else:
         command = f'java -jar /Bioinformatics/00.Tools/gatk-4.1.7.0/gatk-package-4.1.7.0-local.jar \
                     IndexFeatureFile \
-                    -I /Bioinformatics/01.Reference/hg{sys.argv[1]}/Homo_sapiens_assembly{sys.argv[1]}.dbsnp138.vcf'
+                    -I /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.dbsnp138.vcf'
         os.system(command)
 
-    if os.path.isfile(f'/Bioinformatics/01.Reference/hg{sys.argv[1]}/Homo_sapiens_assembly{sys.argv[1]}.dict'):
+    if os.path.isfile(f'/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.dict'):
         pass
     else:
         command = f'java -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
                     CreateSequenceDictionary \
-                    R=/Bioinformatics/01.Reference/hg{sys.argv[1]}/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-                    O=/Bioinformatics/01.Reference/hg{sys.argv[1]}/Homo_sapiens_assembly{sys.argv[1]}.dict'
+                    R=/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.fasta \
+                    O=/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.dict'
         os.system(command)
 
     command = f'java -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
@@ -189,7 +191,7 @@ def Somatic(name, R1, R2):
 
     command = f'java -jar /Bioinformatics/00.Tools/GATK-3.7/GenomeAnalysisTK.jar \
                 -T RealignerTargetCreator \
-                -nt 20 \
+                -nt {BATCH["CPU"]} \
                 -R /Bioinformatics/01.Reference/b37/b37.fa \
                 -L /Bioinformatics/01.Reference/Panel/rna.gene.bed \
                 -known /Bioinformatics/01.Reference/b37/mills.b37.vcf \
@@ -310,13 +312,13 @@ def Somatic(name, R1, R2):
 #     command = f'convert2annovar.pl -includeinfo -allsample -withfreq -format vcf4 03.Output/{name}.final.vcf > 03.Output/{name}.avinput'
 #     os.system(command)
 
-#     command = f'annotate_variation.pl -geneanno -out 03.Output/{name}.hgvs -build hg{sys.argv[1]} \
+#     command = f'annotate_variation.pl -geneanno -out 03.Output/{name}.hgvs -build hg{BATCH["Ref.ver"].split("g")[1]} \
 #                 -dbtype refGene \
 #                 -hgvs 03.Output/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb'
 #     os.system(command)
 
 #     command = f'table_annovar.pl 03.Output/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb \
-#                 -buildver hg{sys.argv[1]} -out 03.Output/{name} \
+#                 -buildver hg{BATCH["Ref.ver"].split("g")[1]} -out 03.Output/{name} \
 #                 -remove -protocol \
 #                 refGene,dbnsfp33a,cosmic70,snp138,snp138NonFlagged,popfreq_max_20150413,popfreq_all_20150413,dbscsnv11,exac03nontcga,avsnp147,clinvar_20160302,gnomad_exome,gnomad_genome \
 #                 -operation g,f,f,f,f,f,f,f,f,f,f,f,f \
@@ -336,20 +338,20 @@ def Somatic(name, R1, R2):
 #     command = f'arriba \
 #             -x 03.Output/{name}_Sorted.out.bam \
 #             -o 03.Output/{name}_fusions.tsv -O 03.Output/{name}_fusions.discarded.tsv \
-#             -a /Bioinformatics/01.Reference/hg{sys.argv[1]}/Homo_sapiens_assembly{sys.argv[1]}.fasta \
-#             -g /Bioinformatics/01.Reference/hg{sys.argv[1]}/gencode.v{sys.argv[1]}.annotation.gtf \
-#             -b /Bioinformatics/01.Reference/hg{sys.argv[1]}/Arriba/blacklist_hg{sys.argv[1]}_hs37d5_GRCh37_v2.1.0.tsv.gz \
-#             -k /Bioinformatics/01.Reference/hg{sys.argv[1]}/Arriba/known_fusions_hg{sys.argv[1]}_hs37d5_GRCh37_v2.1.0.tsv.gz \
-#             -p /Bioinformatics/01.Reference/hg{sys.argv[1]}/Arriba/protein_domains_hg{sys.argv[1]}_hs37d5_GRCh37_v2.1.0.gff3'
+#             -a /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.fasta \
+#             -g /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/gencode.v{BATCH["Ref.ver"].split("g")[1]}.annotation.gtf \
+#             -b /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Arriba/blacklist_hg{BATCH["Ref.ver"].split("g")[1]}_hs37d5_GRCh37_v2.1.0.tsv.gz \
+#             -k /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Arriba/known_fusions_hg{BATCH["Ref.ver"].split("g")[1]}_hs37d5_GRCh37_v2.1.0.tsv.gz \
+#             -p /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Arriba/protein_domains_hg{BATCH["Ref.ver"].split("g")[1]}_hs37d5_GRCh37_v2.1.0.gff3'
 #     os.system(command)
 
 #     command = f'draw_fusions.R \
 #                 --fusions=03.Output/{name}_fusions.tsv \
 #                 --alignments=03.Output/{name}_Sorted.out.bam \
 #                 --output=03.Output/{name}_fusion.pdf \
-#                 --annotation=/Bioinformatics/01.Reference/hg{sys.argv[1]}/gencode.v19.annotation.gtf \
-#                 --cytobands=/Bioinformatics/01.Reference/hg{sys.argv[1]}/Arriba/cytobands_hg19_hs37d5_GRCh37_v2.1.0.tsv \
-#                 --proteinDomains=/Bioinformatics/01.Reference/hg{sys.argv[1]}/Arriba/protein_domains_hg19_hs37d5_GRCh37_v2.1.0.gff3'
+#                 --annotation=/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/gencode.v19.annotation.gtf \
+#                 --cytobands=/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Arriba/cytobands_hg19_hs37d5_GRCh37_v2.1.0.tsv \
+#                 --proteinDomains=/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Arriba/protein_domains_hg19_hs37d5_GRCh37_v2.1.0.gff3'
 #     os.system(command)
 # #----------------------------------------------------------------------------------------#
 # def Info():
@@ -654,10 +656,10 @@ def Somatic(name, R1, R2):
 #         pass
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == 'All':
-    PreQC(Name, R1, R2)
-    Trimming(Name, R1, R2)
-    PostQC(Name, R1, R2)
-    Refindex()
+    # PreQC(Name, R1, R2)
+    # Trimming(Name, R1, R2)
+    # PostQC(Name, R1, R2)
+    # Refindex()
     STAR(Name)
     QC(Name, R1, R2)
     Somatic(Name, R1, R2)
