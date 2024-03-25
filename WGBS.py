@@ -38,7 +38,7 @@ if BATCH["Bismark"] == "Y":
                 {r2}"
         os.system(command)
 #----------------------------------------------------------------------------------------#
-    def Trimming(r1, r2, name):
+    def Trimming(name, r1, r2):
         if os.path.isdir("02.Trimmed"):
             pass
         else:
