@@ -1,21 +1,22 @@
-#!/usr/bin/python3
-
 import os
 import time
 import argparse
+import pandas as pd
+import numpy as np
+from collections import defaultdict
+from datetime import datetime
+from openpyxl.styles import Font
+from openpyxl import Workbook
+from openpyxl import load_workbook
 #import sys
 #import smtplib
 #import math
-import pandas as pd
-#import numpy as np
 #import glob
-#from collections import defaultdict
 #from fpdf import FPDF
-from datetime import datetime
-
+#----------------------------------------------------------------------------------------#
 Start_time = time.time()
 dt = datetime.now()
-
+#----------------------------------------------------------------------------------------#
 parser = argparse.ArgumentParser(description='Pipeline Usage')
 args = parser.parse_args()
 #----------------------------------------------------------------------------------------#
@@ -38,7 +39,7 @@ def PreQC(name, r1, r2):
         pass
     else:
         command = 'mkdir 00.PreQC'
-        os.system(command)
+    os.system(command)
 
     command =f'fastqc -o 00.PreQC\
             -t {BATCH["CPU"]}\
@@ -51,7 +52,7 @@ def Trimming(name, r1, r2):
         pass
     else:
         command = 'mkdir 02.Trimmed'
-        os.system(command)
+    os.system(command)
 
     command = f'/media/src/Tools/TrimGalore-0.6.10/trim_galore \
                 --paired --gzip \
@@ -65,7 +66,7 @@ def PostQC(name, r1, r2):
         pass
     else:
         command = 'mkdir 01.PostQC'
-        os.system(command)
+    os.system(command)
 
     command = f'fastqc -o 01.PostQC \
                 -t {BATCH["CPU"]} \
@@ -84,7 +85,7 @@ def Refindex():
                     --sjdbOverhang 100 \
                     --sjdbGTFfile /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/gencode.v{BATCH["Ref.ver"].split("g")[1]}.annotation.gtf \
                     --genomeFastaFiles /Bioinformatics/01.Reference/b37/b37.fa'
-        os.system(command)
+    os.system(command)
 #----------------------------------------------------------------------------------------#
 def STAR(name):
     command = f'/media/src/Tools/STAR-2.7.11b/source/STAR \
@@ -105,7 +106,7 @@ def QC(name):
         pass
     else:
         command = 'mkdir 04.QC'
-        os.system(command)
+    os.system(command)
 
     command = f'samtools sort 03.Output/{name}_Aligned.out.bam -o 03.Output/{name}_Sorted.out.bam'
     os.system(command)
@@ -133,36 +134,36 @@ def QC(name):
     os.system(command)
 #----------------------------------------------------------------------------------------#
 def Somatic(name):
-    command = f'java -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
-                AddOrReplaceReadGroups \
-                TMP_DIR=03.Output/TEMP_PICARD \
-                VALIDATION_STRINGENCY=SILENT \
-                SO=coordinate \
-                I=03.Output/{name}_Sorted.out.bam \
-                O=03.Output/{name}.read.bam \
-                RGID={name} \
-                RGLB={name} \
-                RGPL=Illumina \
-                RGPU={name} \
-                RGSM={name} CREATE_INDEX=true'
-    os.system(command)
+    # command = f'java -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
+    #             AddOrReplaceReadGroups \
+    #             TMP_DIR=03.Output/TEMP_PICARD \
+    #             VALIDATION_STRINGENCY=SILENT \
+    #             SO=coordinate \
+    #             I=03.Output/{name}_Sorted.out.bam \
+    #             O=03.Output/{name}.read.bam \
+    #             RGID={name} \
+    #             RGLB={name} \
+    #             RGPL=Illumina \
+    #             RGPU={name} \
+    #             RGSM={name} CREATE_INDEX=true'
+    # os.system(command)
 
-    command = f'java -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
-                MarkDuplicates \
-                I=03.Output/{name}.read.bam \
-                O=03.Output/{name}.dedup.bam \
-                M=03.Output/{name}.dedup.metrics \
-                VALIDATION_STRINGENCY=SILENT \
-                REMOVE_DUPLICATES=true'
-    os.system(command)
+    # command = f'java -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
+    #             MarkDuplicates \
+    #             I=03.Output/{name}.read.bam \
+    #             O=03.Output/{name}.dedup.bam \
+    #             M=03.Output/{name}.dedup.metrics \
+    #             VALIDATION_STRINGENCY=SILENT \
+    #             REMOVE_DUPLICATES=true'
+    # os.system(command)
 
-    command = f'samtools index 03.Output/{name}.dedup.bam'
-    os.system(command)
+    # command = f'samtools index 03.Output/{name}.dedup.bam'
+    # os.system(command)
 
     command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
                 -T SplitNCigarReads \
                 -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -L /Bioinformatics/01.Reference/Panel/rna.gene.bed \
+                -L /Bioinformatics/01.Reference/Panel/BCR-ABL1.bed \
                 -I 03.Output/{name}.dedup.bam \
                 -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS \
                 -o 03.Output/{name}.SplitNCigar.bam'
@@ -172,7 +173,7 @@ def Somatic(name):
                 -T RealignerTargetCreator \
                 -nt {BATCH["CPU"]} \
                 -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -L /Bioinformatics/01.Reference/Panel/rna.gene.bed \
+                -L /Bioinformatics/01.Reference/Panel/BCR-ABL1.bed \
                 -known /Bioinformatics/01.Reference/b37/mills.b37.vcf \
                 -I 03.Output/{name}.SplitNCigar.bam \
                 -o 03.Output/{name}.intervals'
@@ -181,7 +182,7 @@ def Somatic(name):
     command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
                 -T IndelRealigner \
                 -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -L /Bioinformatics/01.Reference/Panel/rna.gene.bed \
+                -L /Bioinformatics/01.Reference/Panel/BCR-ABL1.bed \
                 -known /Bioinformatics/01.Reference/b37/mills.b37.vcf \
                 --maxReadsForRealignment 10000000 --maxReadsInMemory 10000000 \
                 -targetIntervals 03.Output/{name}.intervals \
@@ -192,7 +193,7 @@ def Somatic(name):
     command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
                 -T BaseRecalibrator \
                 -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -L /Bioinformatics/01.Reference/Panel/rna.gene.bed \
+                -L /Bioinformatics/01.Reference/Panel/BCR-ABL1.bed \
                 -knownSites /Bioinformatics/01.Reference/b37/a.dbsnp147.b37.vcf \
                 -I 03.Output/{name}.indel.bam \
                 -o 03.Output/{name}.grp'
@@ -201,7 +202,7 @@ def Somatic(name):
     command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
                 -T PrintReads \
                 -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -L /Bioinformatics/01.Reference/Panel/rna.gene.bed \
+                -L /Bioinformatics/01.Reference/Panel/BCR-ABL1.bed \
                 --read_filter MappingQualityZero \
                 -BQSR 03.Output/{name}.grp \
                 -I 03.Output/{name}.indel.bam \
@@ -211,7 +212,7 @@ def Somatic(name):
     command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
                 -T HaplotypeCaller \
                 -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -L /Bioinformatics/01.Reference/Panel/rna.gene.bed \
+                -L /Bioinformatics/01.Reference/Panel/BCR-ABL1.bed \
                 --dbsnp /Bioinformatics/01.Reference/b37/a.dbsnp147.b37.vcf \
                 -I 03.Output/{name}.bam \
                 -o 03.Output/{name}.vcf \
@@ -227,91 +228,81 @@ def Somatic(name):
     command = f'java -jar /Bioinformatics/00.Tools/varscan-2.4.5/VarScan.v2.4.1.jar \
                 mpileup2cns 03.Output/{name}.mpileup \
                 --min-avg-qual 20 --min-coverage 10 --min-reads2 5 \
-                --min-var-freq 0.01 --variants \
+                --min-var-freq 0.01 --variants \ --vcf-sample-list {name} \
                 --output-vcf 1 > 03.Output/{name}.varscan.vcf'
     os.system(command)
 
-    command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
-                -T SelectVariants \
-                -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -selectType SNP \
-                -V 03.Output/{name}.vcf \
-                -o 03.Output/{name}.SNP.vcf'
-    os.system(command)
+    # command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
+    #             -T SelectVariants \
+    #             -R /Bioinformatics/01.Reference/b37/b37.fa \
+    #             -selectType SNP \
+    #             -V 03.Output/{name}.vcf \
+    #             -o 03.Output/{name}.SNP.vcf'
+    # os.system(command)
+
+    # command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
+    #             -T SelectVariants \
+    #             -R /Bioinformatics/01.Reference/b37/b37.fa \
+    #             -selectType INDEL \
+    #             -V 03.Output/{name}.vcf \
+    #             -o 03.Output/{name}.INDEL.vcf'
+    # os.system(command)
+
+    # command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
+    #             -T VariantFiltration \
+    #             -R /Bioinformatics/01.Reference/b37/b37.fa \
+    #             -filterName "PASS" \
+    #             -filter "QD < 2.0 || FS > 60.0 || MQ < 40.0" \
+    #             -V 03.Output/{name}.SNP.vcf \
+    #             -o 03.Output/{name}.filtered.SNP.vcf'
+    # os.system(command)
+
+    # command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
+    #             -T VariantFiltration \
+    #             -R /Bioinformatics/01.Reference/b37/b37.fa \
+    #             -filterName "PASS" \
+    #             -filter "QD < 2.0 || FS > 200.0" \
+    #             -V 03.Output/{name}.INDEL.vcf \
+    #             -o 03.Output/{name}.filtered.INDEL.vcf'
+    # os.system(command)
+
+    # command = f'java -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
+    #             MergeVcfs \
+    #             I=03.Output/{name}.filtered.SNP.vcf \
+    #             I=03.Output/{name}.filtered.INDEL.vcf \
+    #             O=03.Output/{name}.haplotype.vcf'
+    # os.system(command)
 
     command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
-                -T SelectVariants \
-                -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -selectType INDEL \
-                -V 03.Output/{name}.vcf \
-                -o 03.Output/{name}.INDEL.vcf'
-    os.system(command)
+               -T CombineVariants \
+               -R /Bioinformatics/01.Reference/b37/b37.fa \
+               --variant 03.Output/{name}.haplotype.vcf \
+               --variant 03.Output/{name}.varscan.vcf \
+               -o 03.Output/{name}.final.vcf \
+               -genotypeMergeOptions UNIQUIFY'
+    # os.system(command)
 
-    command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
-                -T VariantFiltration \
-                -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -filterName "PASS" \
-                -filter "QD < 2.0 || FS > 60.0 || MQ < 40.0" \
-                -V 03.Output/{name}.SNP.vcf \
-                -o 03.Output/{name}.filtered.SNP.vcf'
-    os.system(command)
-
-    command = f'java -jar /media/src/Tools/GATK-3.7/GenomeAnalysisTK.jar \
-                -T VariantFiltration \
-                -R /Bioinformatics/01.Reference/b37/b37.fa \
-                -filterName "PASS" \
-                -filter "QD < 2.0 || FS > 200.0" \
-                -V 03.Output/{name}.INDEL.vcf \
-                -o 03.Output/{name}.filtered.INDEL.vcf'
-    os.system(command)
-
-    command = f'java -jar /Bioinformatics/00.Tools/picard/build/libs/picard.jar \
-                MergeVcfs \
-                I=03.Output/{name}.filtered.SNP.vcf \
-                I=03.Output/{name}.filtered.INDEL.vcf \
-                O=03.Output/{name}.haplotype.vcf'
-    os.system(command)
-
-    command = f'bgzip -c 03.Output/{name}.haplotype.vcf > 03.Output/{name}.haplotype.vcf.gz'
-    os.system(command)
-
-    command = f'bgzip -c 03.Output/{name}.varscan.vcf > 03.Output/{name}.varscan.vcf.gz'
-    os.system(command)
-
-    command = f'tabix -p vcf 03.Output/{name}.haplotype.vcf.gz'
-    os.system(command)
-
-    command = f'tabix -p vcf 03.Output/{name}.varscan.vcf.gz'
-    os.system(command)
-
-    command = f'vcf-merge 03.Output/{name}.haplotype.vcf.gz 03.Output/{name}.varscan.vcf.gz > 03.Output/{name}.final.vcf'
+    command = f'java -jar /media/src/Tools/snpEff/snpEff.jar \
+               -v hg{BATCH["Ref.ver"].split("g")[1]} \
+               03.Output/{name}.varscan.vcf > 03.Output/{name}.snpeff.vcf'
     os.system(command)
 #----------------------------------------------------------------------------------------#
-# def Annotate(name):
-#     command = f'convert2annovar.pl -includeinfo -allsample -withfreq -format vcf4 03.Output/{name}.final.vcf > 03.Output/{name}.avinput'
-     #os.system(command)
+def Annotate(name):
+    command = f'convert2annovar.pl -includeinfo -allsample -withfreq -format vcf4 03.Output/{name}.snpeff.vcf > 03.Output/{name}.avinput'
+    os.system(command)
 
-#     command = f'annotate_variation.pl -geneanno -out 03.Output/{name}.hgvs -build hg{BATCH["Ref.ver"].split("g")[1]} \
-#                 -dbtype refGene \
-#                 -hgvs 03.Output/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb'
-     #os.system(command)
+    command = f'annotate_variation.pl -geneanno -out 03.Output/{name}.hgvs -build hg{BATCH["Ref.ver"].split("g")[1]} \
+                -dbtype refGene \
+                -hgvs 03.Output/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb'
+    os.system(command)
 
-#     command = f'table_annovar.pl 03.Output/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb \
-#                 -buildver hg{BATCH["Ref.ver"].split("g")[1]} -out 03.Output/{name} \
-#                 -remove -protocol \
-#                 refGene,dbnsfp33a,cosmic70,snp138,snp138NonFlagged,popfreq_max_20150413,popfreq_all_20150413,dbscsnv11,exac03nontcga,avsnp147,clinvar_20160302,gnomad_exome,gnomad_genome \
-#                 -operation g,f,f,f,f,f,f,f,f,f,f,f,f \
-#                 -nastring . -otherinfo'
-     #os.system(command)
-
-#     command = f'less -S 03.Output/{name}.hg19_multianno.txt | head -n 1 > 03.Output/{name}.Gleevec.anno.txt'
-     #os.system(command)
-
-#     command = f'less -S 03.Output/{name}.hg19_multianno.txt | grep -e ABL1 -e BCR >> 03.Output/{name}.Gleevec.anno.txt'
-     #os.system(command)
-
-#     command = f'cp 03.Output/{name}.Gleevec.anno.txt ../Batch'
-     #os.system(command)
+    command = f'table_annovar.pl 03.Output/{name}.avinput /Bioinformatics/00.Tools/annovar/humandb \
+                -buildver hg{BATCH["Ref.ver"].split("g")[1]} -out 03.Output/{name} \
+                -remove -protocol \
+                refGene,dbnsfp33a,cosmic70,snp138,snp138NonFlagged,popfreq_max_20150413,popfreq_all_20150413,dbscsnv11,exac03nontcga,avsnp147,clinvar_20160302,gnomad_exome,gnomad_genome \
+                -operation g,f,f,f,f,f,f,f,f,f,f,f,f \
+                -nastring . -otherinfo'
+    os.system(command)
 # #----------------------------------------------------------------------------------------#
 # def Fusion(name, r1, r2):
 #     command = f'arriba \
@@ -333,313 +324,197 @@ def Somatic(name):
 #                 --proteinDomains=/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Arriba/protein_domains_hg19_hs37d5_GRCh37_v2.1.0.gff3'
      #os.system(command)
 # #----------------------------------------------------------------------------------------#
-# def Info():
-#     CS = {}
-#     RCV = {}
-#     with open('/Bioinformatics/01.Reference/230211.Clinvar.BCR.ABL1.Variation.txt', 'r') as patho:
-#         for line in patho:
-#             line = line.strip()
-#             splitted = line.split('\t')
-#             PROTEIN = splitted[2]
-#             CHARACTER = splitted[5]
-#             Rcv = splitted[6]
-#             CS[PROTEIN] = CHARACTER
-#             RCV[PROTEIN] = Rcv
+def MakeSheet(name):
+    CS = {}
+    RCV = {}
+    with open('/Bioinformatics/01.Reference/230211.Clinvar.BCR.ABL1.Variation.txt', 'r') as patho:
+        for line in patho:
+            line = line.strip()
+            splitted = line.split('\t')
+            PROTEIN = splitted[2]
+            CHARACTER = splitted[5]
+            Rcv = splitted[6]
+            CS[PROTEIN] = CHARACTER
+            RCV[PROTEIN] = Rcv
 
-#     DRUG = {}
-#     with open('/Bioinformatics/01.Reference/230210.ABL.Drug.resistance.txt', 'r') as patho:
-#         for line in patho:
-#             line = line.strip()
-#             splitted = line.split('\t')
-#             PROTEIN = splitted[0]
-#             Drug = splitted[1]
-#             DRUG[PROTEIN] = Drug
-#     Main_Accession = {'NM_005157': 'O', 'NM_007313' : '', 'NM_004327' : 'O', 'NM_021574' : ''}
+    DRUG = {}
+    with open('/Bioinformatics/01.Reference/230210.ABL.Drug.resistance.txt', 'r') as patho:
+        for line in patho:
+            line = line.strip()
+            splitted = line.split('\t')
+            PROTEIN = splitted[0]
+            Drug = splitted[1]
+            DRUG[PROTEIN] = Drug
+    Main_Accession = {'NM_005157': 'O', 'NM_007313' : '', 'NM_004327' : 'O', 'NM_021574' : ''}
+    #--------------------------------------------------------------------------------------------------# 
+    batch_config = pd.read_csv(f'{Name}.batch.config', sep='\t', header=None, names=['Info'])
+    batch_config[['Info', 'value']] = batch_config['Info'].str.split('=', expand=True)
+    SAMPLE_COUNT = int(batch_config.iloc[44,1])
+    SAMPLE_ID = batch_config.iloc[45,1].split(',')
+    SAMPLE_PATH = batch_config.iloc[46,1].split(',')
 
-#     return CS, RCV, DRUG, Main_Accession
+    COUNT = 0
+    BATCH = {}
+    for samp, samp_path in zip(SAMPLE_ID, SAMPLE_PATH):
+        if os.path.exists(f'{samp_path}03.Output/{samp}.hg19_multianno.txt'):
+            COUNT += 1
+            with open(f'{samp_path}03.Output/{samp}.hg19_multianno.txt', 'r') as anno:
+                for line in anno:
+                    if line.startswith('Chr'):
+                        continue
+                    line = line.strip()
+                    splitted = line.split('\t')
+                    Batch_info = '_'.join(splitted[0:7])
+                    if Batch_info not in BATCH.keys():
+                        BATCH[Batch_info] = 1
+                    elif Batch_info in BATCH.keys():
+                        BATCH[Batch_info] += 1
 
-# Information = Info()
-# CS = Information[0]
-# RCV = Information[1]
-# DRUG =Information[2]
-# Main_Accession = Information[3]
-# #----------------------------------------------------------------------------------------#
-# def BatchCount():
-#     with open('../SampleSheet.txt', 'r') as sample:
-#         Sample_Count = 0
-#         for line in sample:
-#             Sample_Count += 1
-#         return Sample_Count
+    if COUNT != SAMPLE_COUNT:
+        time.sleep(60)
+        MakeSheet(Name)
+    elif COUNT == SAMPLE_COUNT:
+        pass
+    #--------------------------------------------------------------------------------------------------#
+    VARIANTS = defaultdict(list)
+    Anno = pd.read_csv(f'03.Output/{name}.hg19_multianno.txt', sep='\t')
+    Header_Info = list(Anno.columns[10:])
+    varscan_format = Anno.iloc[:,143]
+    varscan = Anno.iloc[:,144]
 
-# Sample_Count = BatchCount()
+    for i in range(Anno.shape[0]):
+        Chr = str(Anno.iloc[i,0])
+        Start = str(Anno.iloc[i,1])
+        End = str(Anno.iloc[i,2])
+        Ref = Anno.iloc[i,138]
+        Alt = Anno.iloc[i,139]
+        Region = Anno.iloc[i,5]
+        Gene = Anno.iloc[i,6]
+        Other_info = Anno.iloc[i, 10:]
+        Gene = Anno.iloc[i,6]
+        Flag = Anno.iloc[i,141]
 
-# def Batch(target_count, time_inverval):
-#     while True:
-#         file_count = len(os.listdir('/labmed/94.Pipeline_Test/Batch'))
+        varscan_per_row = varscan.iloc[i]
+        varscan_format_per_row = varscan_format.iloc[i]
+        VAF_info = dict(zip(varscan_format_per_row.split(':'), varscan_per_row.split(':')))
 
-#         if file_count >= target_count:
-#             break
-#         else:
-#             time.sleep(time_inverval) 
+        Batch = Anno.iloc[i,0:7].to_list()
+        Batch = '_'.join(map(str, Anno.iloc[i,0:7].to_list()))
+        #--------------------------------------------------------------------------------------------------#
+        if Anno.iloc[i,5] == 'exonic':          
+            vtype = Anno.iloc[i,8]
+            vinfo = Anno.iloc[i,9]
+            for variant in vinfo.split(','):
+                variant = variant.split(':')
+                NM = variant[1]
+                Exon = variant[2]
+                HGVSc = variant[3]
+                HGVSp = variant[4]
+                if HGVSp in CS.keys():
+                    Clinical = CS[HGVSp]
+                    RCV_clinvar = RCV[HGVSp]
+                else:
+                    Clinical = 'Uncertain significance'
+                    RCV_clinvar = ' '
+                if HGVSp in DRUG.keys():
+                    Drug = DRUG[HGVSp]
+                else:
+                    Drug = ' '
 
-#     with open('../SampleSheet.txt', 'r') as sample:
-#         BATCH = {}
-#         for line in sample:
-#             splitted = line.strip().split('\t')
-#             name = splitted[0]
-#             with open(f'/labmed/94.Pipeline_Test/Batch/{name}.Gleevec.anno.txt', 'r') as anno:
-#                 for line in anno:
-#                     if line.startswith('Chr'):
-#                         continue
-#                     line = line.strip()
-#                     splitted = line.split('\t')
-#                     Batch_info = splitted[0] + splitted[1] + splitted[2] + splitted[138] + splitted[139] + splitted[5]
-#                     if Batch_info not in BATCH.keys():
-#                         BATCH[Batch_info] = 1
-#                     elif Batch_info in BATCH.keys():
-#                         BATCH[Batch_info] += 1
+                VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].extend([
+                        ' ', \
+                        Main_Accession[NM],\
+                        Chr + ':' + Start + '-' + End,\
+                        Region,\
+                        vtype,\
+                        Gene,\
+                        NM,\
+                        HGVSc,\
+                        Ref,\
+                        Alt,\
+                        HGVSp,\
+                        Clinical,\
+                        float(VAF_info['FREQ'].replace('%', '')),\
+                        int(VAF_info['AD']),\
+                        int(VAF_info['DP']),\
+                        Flag,\
+                        Exon,\
+                        RCV_clinvar,\
+                        Drug,\
+                        str(BATCH[Batch]) + '/' + str(SAMPLE_COUNT)])
 
-#         return BATCH
+                for remain in Other_info:
+                    VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].append(str(remain))
+        #--------------------------------------------------------------------------------------------------#
+        elif Region == 'UTR5' or Region == 'UTR3':
+            vinfo = Anno.iloc[i,7]
+            for variant in vinfo.split(';'):
+                variant = variant.split(':')
+                NM = variant[0]
+                HGVSc = variant[1]
+                HGVSp = ' '
+                Variant_Type = ' '
+                Clinical = ' '
+                Exon = ' '
+                RCV_clinvar = ' '
+                Drug = ' '
+                VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].extend([
+                        ' ', \
+                        Main_Accession[NM],\
+                        Chr + ':' + Start + '-' + End,\
+                        Region,\
+                        Variant_Type,\
+                        Gene,\
+                        NM,\
+                        HGVSc,\
+                        Ref,\
+                        Alt,\
+                        HGVSp,\
+                        Clinical,\
+                        float(VAF_info['FREQ'].replace('%', '')),\
+                        int(VAF_info['AD']),\
+                        int(VAF_info['DP']),\
+                        Flag,\
+                        Exon,\
+                        RCV_clinvar,\
+                        Drug,\
+                        str(BATCH[Batch]) + '/' + str(SAMPLE_COUNT)])
 
-# BATCH = Batch(BatchCount(), 60)
-# #----------------------------------------------------------------------------------------#
-# def MakeSheet(name):
-#     global BATCH
-#     global Sample_Count
-#     global CS
-#     global RCV
-#     global DRUG
-#     global Main_Accession
-#     VARIANTS = defaultdict(list)
-#     Anno = pd.read_csv(f'03.Output/{name}.Gleevec.anno.txt', sep='\t')
-#     Header_Info = list(Anno.columns[10:])
-#     Other = Anno.iloc[:,10:]
-#     Flag = Anno.iloc[:,141]
-#     Format = Anno.iloc[:,143]
-#     GATK_info = Anno.iloc[:,144]
-#     Varscan_info = Anno.iloc[:,145]
+                for remain in Other_info:
+                    VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].append(str(remain))
+        #--------------------------------------------------------------------------------------------------#
 
-#     Format = Format.str.split(':', expand=True)
-#     GATK_info = GATK_info.str.split(':', expand=True)
-#     GATK_info.replace(to_replace=np.nan, value='.', inplace=True)
-#     Varscan_info = Varscan_info.str.split(':', expand=True)
-#     Varscan_info.replace(to_replace=np.nan, value='.', inplace=True)
+#Annotation Exel
+    Data = pd.DataFrame(VARIANTS)
+    Data = Data.transpose()
+    COLUMNS = ['Select','Main','Chromosome Position', 'Region','Variant Type', 'Gene', 'NM number', 'HGVSc', 'REF', 'ALT',\
+                'HGVSp', 'Clinvar assertion', 'VAF (%)', 'AD', 'DP', \
+                'Flag', 'Exon locus', 'RCV.clinvar', 'Drug', 'Same in Batch'] + Header_Info
+    Data.columns = COLUMNS
 
-#     GATK_info = Format + ':' + GATK_info
-#     Varscan_info = Format + ':' + Varscan_info
-#     GATK_info = GATK_info.fillna(value=':.')
-#     Varscan_info = Varscan_info.fillna(value=':.')
+    def text_color(val):
+        color = 'red' if not val == 'Uncertain significance' else 'black'
+        return 'color: %s' % color
 
-#     GATK_info = GATK_info.apply(lambda row: ':'.join(row), axis=1)
-#     Varscan_info = Varscan_info.apply(lambda row: ':'.join(row), axis=1)
+    Data = Data.style.applymap(text_color, subset=pd.IndexSlice[:, ['Clinvar assertion']])
 
-#     for i in range(Anno.shape[0]):
-#         Chr = str(Anno.iloc[i,0])
-#         Start = str(Anno.iloc[i,1])
-#         End = str(Anno.iloc[i,2])
-#         Ref = Anno.iloc[i,138]
-#         Alt = Anno.iloc[i,139]
-#         Region = Anno.iloc[i,5]
-#         Gene = Anno.iloc[i,6]
+    with pd.ExcelWriter(f'03.Output/{name}.results.xlsx') as excel_note:
+        Data.to_excel(excel_note, sheet_name='mutation', index=False)
 
-#         GATK = GATK_info.iloc[i]
-#         GATK = GATK.split(':')
-#         GT_GATK = GATK.index('GT') + 1
-#         DP_GATK = GATK.index('DP') + 1
-#         AD_GATK = GATK.index('AD') + 1
-#         if DP_GATK != '.':
-#             VAF_GATK = (float(AD_GATK) / float(DP_GATK)) * 100
-#         else:
-#             DP_GATK = AD_GATK = VAF_GATK = ''
-
-#         Varscan = Varscan_info.iloc[i]
-#         Varscan = Varscan.split(':')
-#         GT_Varscan = Varscan.index('GT') + 1
-#         DP_Varscan = Varscan.index('DP') + 1
-#         AD_Varscan = Varscan.index('AD') + 1
-#         if DP_Varscan != '.':
-#             VAF_Varscan = (float(AD_Varscan) / float(DP_Varscan)) * 100
-#         else:
-#             DP_Varscan= AD_Varscan = VAF_Varscan = ''
-
-#         Batch = Chr + Start + End + Ref + Alt + Region
-
-#         if Anno.iloc[i,5] == 'exonic':          
-#             vtype = Anno.iloc[i,8]
-#             vinfo = Anno.iloc[i,9]
-#             HGVSp = vinfo.split(':')[4]
-#             HGVSp = HGVSp.split(',')[0]
-#             for variant in vinfo.split(','):
-#                 variant = variant.split(':')
-#                 NM = variant[1]
-#                 Exon = variant[2]
-#                 HGVSc = variant[3]
-#                 HGVSp_real = variant[4]
-#                 if HGVSp in CS.keys():
-#                     Clinical = CS[HGVSp]
-#                     RCV_clinvar = RCV[HGVSp]
-#                 else:
-#                     Clinical = 'Uncertain significance'
-#                     RCV_clinvar = ' '
-#                 if HGVSp in DRUG.keys():
-#                     Drug = DRUG[HGVSp]
-#                 else:
-#                     Drug = ' '
-
-#                 VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].extend([
-#                         ' ', \
-#                         Main_Accession[NM],\
-#                         Chr + ':' + Start + '-' + End,\
-#                         Region,\
-#                         vtype,\
-#                         Gene,\
-#                         NM,\
-#                         HGVSc,\
-#                         Ref,\
-#                         Alt,\
-#                         HGVSp_real,\
-#                         Clinical,\
-#                         VAF_Varscan,\
-#                         VAF_GATK,\
-#                         AD_Varscan,\
-#                         DP_Varscan,\
-#                         AD_GATK,\
-#                         DP_GATK,\
-#                         Flag,\
-#                         Exon,\
-#                         RCV_clinvar,\
-#                         Drug,\
-#                         str(BATCH[Batch]) + '/' + str(Sample_Count)])
-
-#                 for remain in Other:
-#                     VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].append(remain)
-
-#         elif Region == 'intronic':
-#                 NM = ' '
-#                 HGVSc = ' '
-#                 HGVSp = ' '
-#                 Variant_Type = ' '
-#                 Clinical = ' '
-#                 Exon = ' '
-#                 RCV_clinvar = ' '
-#                 Drug = ' '
-#                 VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].extend([
-#                         ' ', \
-#                         ' ', \
-#                         Chr + ':' + Start + '-' + End,\
-#                         Region,\
-#                         Variant_Type,\
-#                         Gene,\
-#                         NM,\
-#                         HGVSc,\
-#                         Ref,\
-#                         Alt,\
-#                         HGVSp,\
-#                         Clinical,\
-#                         VAF_Varscan,\
-#                         VAF_GATK,\
-#                         AD_Varscan,\
-#                         DP_Varscan,\
-#                         AD_GATK,\
-#                         DP_GATK,\
-#                         Flag,\
-#                         Exon,\
-#                         RCV_clinvar,\
-#                         Drug,\
-#                         str(BATCH[Batch]) + '/' + str(Sample_Count)])
-
-#                 for remain in Other:
-#                     VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].append(remain)
-
-#         elif Region == 'UTR5' or Region == 'UTR3':
-#             vinfo = Anno.iloc[i,7]
-#             for variant in vinfo.split(';'):
-#                 variant = variant.split(':')
-#                 NM = variant[0]
-#                 HGVSc = variant[1]
-#                 HGVSp = ' '
-#                 Variant_Type = ' '
-#                 Clinical = ' '
-#                 Exon = ' '
-#                 RCV_clinvar = ' '
-#                 Drug = ' '
-#                 VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].extend([
-#                         ' ', \
-#                         Main_Accession[NM],\
-#                         Chr + ':' + Start + '-' + End,\
-#                         Region,\
-#                         Variant_Type,\
-#                         Gene,\
-#                         NM,\
-#                         HGVSc,\
-#                         Ref,\
-#                         Alt,\
-#                         HGVSp,\
-#                         Clinical,\
-#                         VAF_Varscan,\
-#                         VAF_GATK,\
-#                         AD_Varscan,\
-#                         DP_Varscan,\
-#                         AD_GATK,\
-#                         DP_GATK,\
-#                         Flag,\
-#                         Exon,\
-#                         RCV_clinvar,\
-#                         Drug,\
-#                         str(BATCH[Batch]) + '/' + str(Sample_Count)])
-
-#                 for remain in Other:
-#                     VARIANTS[Chr + Start + Ref + Alt + Gene + HGVSp + NM].append(remain)
-
-#     Stats = {}
-#     Stats_list = []
-#     with open(f'04.QC/{name}.Depth.txt', 'r') as stats:
-#         for line in stats:
-#             line = line.strip()
-#             Stats_list.append(line)
-#         Stats[name] = Stats_list[0:]
-
-# ##Annotation Exel
-#     Data = pd.DataFrame(VARIANTS)
-#     Data = Data.transpose()
-#     Header_Info[70] = 'PopFreqAll'
-#     COLUMNS = ['Select','Main','Chromosome Position', 'Region','Variant Type', 'Gene', 'NM number', 'HGVSc', 'REF', 'ALT',\
-#                 'HGVSp', 'Clinvar assertion', 'VAF_Varscan', 'VAF_GATK', 'AD_Varscan', 'DP_Varscan', 'AD_GATK', 'DP_GATK', \
-#                 'Flag', 'Exon locus', 'RCV.clinvar', 'Drug', 'Same in Batch'] + Header_Info
-#     Data.columns = COLUMNS
-
-#     def text_color(val):
-#         color = 'red' if not val == 'Uncertain significance' else 'black'
-#         return 'color: %s' % color
-
-#     Data = Data.style.applymap(text_color, subset=pd.IndexSlice[:, ['Clinvar assertion']])
-
-#     writer = pd.ExcelWriter(f'03.Output/{name}.results.xlsx') 
-
-#     Data.to_excel(writer, sheet_name='판독', index=False, na_rep='NaN')
-
-# ##Stat Exel
-#     Quanti_Data = pd.DataFrame(Stats)
-
-#     Quanti_Data.to_excel(writer, sheet_name='QC', index=False, na_rep='NaN')
-
-#     for column in Quanti_Data:
-#         column_length = max(Quanti_Data[column].astype(str).map(len).max(), len(column))
-#         col_idx = Quanti_Data.columns.get_loc(column)
-#         writer.sheets['QC'].set_column(col_idx, col_idx, 20)
-#     writer.save()
-
-#     if os.path.isfile(f'03.Output/{name}.results.xlsx'):
-#         print(f'{name} Annotation complete!')
-#     else:
-#         pass
+    # wb = load_workbook(f'03.Output/{name}.results.xlsx')
+    # ws = wb['mutation']
+    # font = Font(name='Arial')
+    # for row in ws.iter_rows():
+    #     for cell in row:
+    #         cell.font = font
+    # wb.save(f'03.Output/{name}.results.xlsx')
 #----------------------------------------------------------------------------------------#
 def Indexing():
     if os.path.isfile(f'/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.fasta.fai'):
         pass
     else:
         command = f'samtools faidx /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.fasta'
-        os.system(command)
+    os.system(command)
 
     if os.path.isfile(f'/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.dbsnp138.vcf.idx'):
         pass
@@ -647,7 +522,7 @@ def Indexing():
         command = f'java -jar /Bioinformatics/00.Tools/gatk-4.1.7.0/gatk-package-4.1.7.0-local.jar \
                     IndexFeatureFile \
                     -I /Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.dbsnp138.vcf'
-        os.system(command)
+    os.system(command)
 
     if os.path.isfile(f'/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.dict'):
         pass
@@ -656,7 +531,7 @@ def Indexing():
                     CreateSequenceDictionary \
                     R=/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.fasta \
                     O=/Bioinformatics/01.Reference/hg{BATCH["Ref.ver"].split("g")[1]}/Homo_sapiens_assembly{BATCH["Ref.ver"].split("g")[1]}.dict'
-        os.system(command)
+    os.system(command)
 #----------------------------------------------------------------------------------------#
 if BATCH["Step"] == 'All':
     # PreQC(Name, R1, R2)
@@ -666,9 +541,9 @@ if BATCH["Step"] == 'All':
     # STAR(Name)
     # QC(Name)
     Somatic(Name)
-    # Annotate(Name)
+    Annotate(Name)
+    MakeSheet(Name)
     # Fusion(Name, R1, R2)
-    # MakeSheet(Name)
 elif BATCH["Step"] == 'FastQC':
     PreQC(Name, R1, R2)
     Trimming(Name, R1, R2)
